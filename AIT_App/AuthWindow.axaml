@@ -40,7 +40,7 @@
                          <!-- Область с кнопками -->
                             <StackPanel Grid.Row="1">
                                 
-                                <Button HorizontalAlignment="Center" Margin="5" FontWeight="DemiBold" Content="Вход" />
+                                <Button Foreground="Black" Background="Red" HorizontalAlignment="Center" Margin="5" FontWeight="DemiBold"  Content="Вход" />
                                 
                             </StackPanel>
                         
