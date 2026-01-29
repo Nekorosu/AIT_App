@@ -33,7 +33,8 @@
                                 
                                 <!-- Пароль -->
                                 <TextBlock HorizontalAlignment="Center" Foreground="Black" Text="Пароль" FontSize="15" FontWeight="DemiBold" Margin="5,1,5,5"/> 
-                                <TextBox  Margin="5,1,5,5" HorizontalAlignment="Center" Width="250" Text="password"></TextBox>
+                                <TextBox  Margin="5,1,5,5" HorizontalAlignment="Center" Width="250" PasswordChar="*" Watermark="Введите пароль"/>
+
                                 
                             </StackPanel>
                                 
