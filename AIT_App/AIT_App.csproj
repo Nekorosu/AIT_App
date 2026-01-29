@@ -18,4 +18,17 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
     </ItemGroup>
+
+    <ItemGroup>
+      <None Update="AuthWindowDoc.txt">
+        <DependentUpon>AuthWindow.axaml</DependentUpon>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Icons\check.png" />
+      <AvaloniaResource Include="Icons\check.png" />
+      <None Remove="Icons\exclamation.png" />
+      <AvaloniaResource Include="Icons\exclamation.png" />
+    </ItemGroup>
 </Project>
