@@ -62,11 +62,11 @@
                             <Panel Grid.Column="1">
                                 <Image VerticalAlignment="Top" Source="Icons/check.png" Width="35" Height="35" Margin="0,10,0,0"></Image>
                                 <Image VerticalAlignment="Top" Source="Icons/exclamation.png" Width="30" Height="30" Margin="0,10,0,0"></Image>
-                                
                             </Panel>
                             
                         </Grid>
                     
+                    <!--GOIDA ANAL-->
                     
                 </Grid>
 </Window>
