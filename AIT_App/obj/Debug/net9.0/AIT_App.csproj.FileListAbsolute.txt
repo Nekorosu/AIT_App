@@ -71,3 +71,4 @@
 /home/geguh/RiderProjects/AIT_App/AIT_App/obj/Debug/net9.0/AIT_App.pdb
 /home/geguh/RiderProjects/AIT_App/AIT_App/obj/Debug/net9.0/AIT_App.genruntimeconfig.cache
 /home/geguh/RiderProjects/AIT_App/AIT_App/obj/Debug/net9.0/ref/AIT_App.dll
+/home/geguh/RiderProjects/AIT_App/AIT_App/obj/Debug/net9.0/AIT_App.sourcelink.json

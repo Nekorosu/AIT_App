@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace AIT_App;
 
-public partial class MainWindow : Window
+public partial class AuthWindow : Window
 {
-    public MainWindow()
+    public AuthWindow()
     {
         InitializeComponent();
     }
