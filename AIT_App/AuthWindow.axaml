@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450" Width="300" Height="450"
+        x:Class="AIT_App.AuthWindow" Background="White" Title="AIT_App">
+        
+    
+                <!-- Главное окно аутентификации -->
+                
+                <Grid RowDefinitions="0.1*,0.75*, 0.25*" ShowGridLines="True"> <!-- Разбиение окна на 3 основных части: Заголовок, форма входа, статус соединения с БД -->
+                    
+                    
+                    <!-- Заголовок -->
+                    <Grid Grid.Row="0"> 
+                        <TextBlock Foreground="Black" Text="Вход в систему" FontWeight="Bold" FontSize="25" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Grid>
+                    
+                    
+                    <!-- Форма ввода -->
+                    <Grid Grid.Row="1" RowDefinitions="0.4*,0.6*" ShowGridLines="True"> <!-- Разбиение на еще 2 составных части: форма ввода данных и область с кнопками -->
+                        
+                         <!-- Форма ввода данных -->
+                            <StackPanel Grid.Row="0">
+
+                                <!-- Логин -->
+                                <TextBlock Foreground="Black" Text="Войти как" FontSize="15" FontWeight="DemiBold" Margin="5,1,5,5"/> 
+                               
+                                <ComboBox Margin="5,1,5,5" Width="250" SelectedIndex="-1"> <!-- Выпадающий список пользователей -->
+                                    <ComboBoxItem>Павлоградский И. В.</ComboBoxItem>
+                                    <ComboBoxItem>Шоршик А. Ю.</ComboBoxItem>
+                                </ComboBox>
+                                
+                                <!-- Пароль -->
+                                <TextBlock Foreground="Black" Text="Пароль" FontSize="15" FontWeight="DemiBold" Margin="5,1,5,5"/> 
+                                <TextBox Margin="5,1,5,5" HorizontalAlignment="Left" Width="250" Text="password"></TextBox>
+                                
+                                
+                            </StackPanel>
+                                              
+                        
+                    </Grid>
+                    
+                    
+                </Grid>
+</Window>
