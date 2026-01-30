@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.10"/>
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.10"/>
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.10"/>
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.10"/>
@@ -20,15 +21,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="AuthWindowDoc.txt">
+      <None Remove="Icons\check.png" />
+      <AvaloniaResource Include="Icons\check.png" />
+      <None Remove="Icons\exclamation.png" />
+      <AvaloniaResource Include="Icons\exclamation.png" />
+      <None Update="Windows\AuthWindowDoc.txt">
         <DependentUpon>AuthWindow.axaml</DependentUpon>
       </None>
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Icons\check.png" />
-      <AvaloniaResource Include="Icons\check.png" />
-      <None Remove="Icons\exclamation.png" />
-      <AvaloniaResource Include="Icons\exclamation.png" />
+      <Compile Update="Windows\AuthWindow.axaml.cs">
+        <DependentUpon>AuthWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>
