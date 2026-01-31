@@ -2,9 +2,9 @@ using System;
 using Avalonia.Controls;
 namespace AIT_App;
 
-public partial class SessionReport : Window
+public partial class MainWindow : Window
 {
-    public SessionReport()
+    public MainWindow()
     {
         InitializeComponent();
     }
