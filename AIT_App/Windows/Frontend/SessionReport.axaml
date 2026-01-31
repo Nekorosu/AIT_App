@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Width="800" Height="450"
+        x:Class="AIT_App.SeesionReport" Background="White" Title="Session">
+        
+    
+    
+    
+    <!-- Основное окно отчета по сессии -->
+  <Grid ColumnDefinitions="0.3*, 0.7*" ShowGridLines="True">
+      
+      <StackPanel Grid.Column="0">
+          
+         
+          <Label Content="Группа" FontSize="15" FontWeight="DemiBold" Margin="5,5,0,0"/>
+          <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
+              
+              <ComboBoxItem></ComboBoxItem>
+              <ComboBoxItem>ИСП-1-23</ComboBoxItem>
+              <ComboBoxItem>ИСП-2-23</ComboBoxItem>
+              <ComboBoxItem>СД-1-23</ComboBoxItem>
+              <ComboBoxItem>ПД-2-24</ComboBoxItem>
+              <ComboBoxItem>ГОЙДА-228-42</ComboBoxItem>
+              
+          </ComboBox>
+          
+          <Label Content="Предмет" FontSize="15" FontWeight="DemiBold" Margin="5,0,0,0"/>
+          <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
+              
+              <ComboBoxItem></ComboBoxItem>
+              <ComboBoxItem>Рожновский</ComboBoxItem>
+              <ComboBoxItem>Дядя гена</ComboBoxItem>
+              <ComboBoxItem>Отец Щавинский</ComboBoxItem>
+              <ComboBoxItem>Шершавый</ComboBoxItem>
+              
+          </ComboBox>
+          
+      </StackPanel>
+      
+  </Grid>
+    
+</Window>
