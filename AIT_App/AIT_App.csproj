@@ -28,11 +28,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Windows\Backend\AuthWindow.axaml.cs">
+      <Compile Update="Windows\Backend\AuthWindow\AuthWindow.axaml.cs">
         <DependentUpon>AuthWindow.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Windows\Backend\SessionReport.axaml.cs">
+      <Compile Update="Windows\Backend\SessionReport\SessionReport.axaml.cs">
         <DependentUpon>SessionReport.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>

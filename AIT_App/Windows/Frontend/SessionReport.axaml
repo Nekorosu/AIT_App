@@ -55,7 +55,7 @@
                   <!-- Левый календарь -->
                   <StackPanel Grid.Column="0" Margin="5,0,0,0">
                       <Label Content="От" FontSize="15" FontWeight="DemiBold"/>
-                      <CalendarDatePicker Watermark="дд.мм.гггг" />
+                      <CalendarDatePicker Watermark="дд.мм.гггг" SelectedDate="" />
                   </StackPanel>
               
                   <!-- Правый календарь -->

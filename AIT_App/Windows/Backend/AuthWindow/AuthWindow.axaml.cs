@@ -11,11 +11,12 @@ public partial class AuthWindow : Window
        
     }
 
-    private void button_Click(object sender, RoutedEventArgs e)
+    private void OpenSession_Click(object sender, RoutedEventArgs e)
     {
 
         var session = new SeesionReport();
         session.Show();
+        this.Close();
         
 
     }
