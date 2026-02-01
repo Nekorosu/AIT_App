@@ -2,18 +2,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" Width="800" Height="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" Width="1000" Height="450"
         x:Class="AIT_App.SeesionReport" Background="White" Title="Session">
         
     
     
     
     <!-- Основное окно отчета по сессии -->
-  <Grid ColumnDefinitions="0.3*, 0.7*" ShowGridLines="True">
+  <Grid ColumnDefinitions="0.3*, 0.7*" ShowGridLines="True"> <!-- разделение на панель фильтров и окно вывода информации -->
       
+      <!-- Панель фильтров -->
       <StackPanel Grid.Column="0">
-          
          
+          <!-- Выпадающий список с группами -->
           <Label Content="Группа" FontSize="15" FontWeight="DemiBold" Margin="5,5,0,0"/>
           <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
               
@@ -26,6 +27,7 @@
               
           </ComboBox>
           
+          <!-- Выпадающий список с предметами -->
           <Label Content="Предмет" FontSize="15" FontWeight="DemiBold" Margin="5,0,0,0"/>
           <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
               
@@ -36,6 +38,53 @@
               <ComboBoxItem>Шершавый</ComboBoxItem>
               
           </ComboBox>
+
+          <!-- Период времени, в который надо вывести оценки -->
+          <Label Content="Дата" FontSize="18" FontWeight="DemiBold" HorizontalAlignment="Center"/>
+          
+          <!-- Разделение календарей на 2 столбца для удобства пользователя -->
+          <Border BorderBrush="Black" 
+                  BorderThickness="2" 
+                  CornerRadius="6"
+                  Padding="8" 
+                  Margin="5"
+                  Background="WhiteSmoke"> <!-- Обведение фильтра периода -->
+              
+              <Grid ColumnDefinitions="0.5*,0.5*">
+                
+                  <!-- Левый календарь -->
+                  <StackPanel Grid.Column="0" Margin="5,0,0,0">
+                      <Label Content="От" FontSize="15" FontWeight="DemiBold"/>
+                      <CalendarDatePicker Watermark="дд.мм.гггг" />
+                  </StackPanel>
+              
+                  <!-- Правый календарь -->
+                  <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                      <Label Content="До" FontSize="15" FontWeight="DemiBold"/>
+                      <CalendarDatePicker Watermark="дд.мм.гггг" />  
+                  </StackPanel>
+              </Grid>
+          </Border>
+          
+          <!--  -->
+          <Panel>
+              <Button HorizontalAlignment="Left" 
+                      Margin="5"
+                      Content="Показать оценки"
+                      FontSize="14"
+                      FontWeight="DemiBold"/>
+              <Button HorizontalAlignment="Right" 
+                      Margin="5" 
+                      Content="Показать сессии"
+                      FontSize="14"
+                      FontWeight="DemiBold"/>
+          </Panel>
+          <Button HorizontalAlignment="Stretch"
+                  Margin="5"
+                  Content="Запланировать сессию"
+                  HorizontalContentAlignment="Center"
+                  FontSize="14"
+                  FontWeight="DemiBold"/>
           
       </StackPanel>
       

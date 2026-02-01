@@ -25,14 +25,15 @@
       <AvaloniaResource Include="Icons\check.png" />
       <None Remove="Icons\exclamation.png" />
       <AvaloniaResource Include="Icons\exclamation.png" />
-      <None Update="Windows\AuthWindowDoc.txt">
-        <DependentUpon>AuthWindow.axaml</DependentUpon>
-      </None>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Windows\AuthWindow.axaml.cs">
+      <Compile Update="Windows\Backend\AuthWindow.axaml.cs">
         <DependentUpon>AuthWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Windows\Backend\SessionReport.axaml.cs">
+        <DependentUpon>SessionReport.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

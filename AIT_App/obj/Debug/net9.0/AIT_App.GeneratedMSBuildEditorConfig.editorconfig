@@ -26,5 +26,8 @@ build_property.EnableCodeStyleSeverity =
 [/home/geguh/RiderProjects/AIT_App/AIT_App/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/geguh/RiderProjects/AIT_App/AIT_App/AuthWindow.axaml]
+[/home/geguh/RiderProjects/AIT_App/AIT_App/Windows/Frontend/AuthWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/geguh/RiderProjects/AIT_App/AIT_App/Windows/Frontend/SessionReport.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
