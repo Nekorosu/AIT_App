@@ -14,7 +14,7 @@ public partial class AuthWindow : Window
     private void OpenSession_Click(object sender, RoutedEventArgs e)
     {
 
-        var session = new SeesionReport();
+        var session = new SessionReport();
         session.Show();
         this.Close();
         

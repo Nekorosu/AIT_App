@@ -2,14 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:AIT_App.ViewModels"
+        x:DataType="vm:SessionReportViewModel"
         mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450" Width="1000" Height="450"
-        x:Class="AIT_App.SeesionReport" Background="White" Title="Session">
+        x:Class="AIT_App.SessionReport" Background="White" Title="Session">
         
     
     
     
     <!-- Основное окно отчета по сессии -->
-  <Grid ColumnDefinitions="0.3*, 0.7*" ShowGridLines="True"> <!-- разделение на панель фильтров и окно вывода информации -->
+  <Grid ColumnDefinitions="300, *" ShowGridLines="True"> <!-- разделение на панель фильтров и окно вывода информации -->
       
       <!-- Панель фильтров -->
       <StackPanel Grid.Column="0">
@@ -18,7 +20,7 @@
           <Label Content="Группа" FontSize="15" FontWeight="DemiBold" Margin="5,5,0,0"/>
           <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
               
-              <ComboBoxItem></ComboBoxItem>
+              
               <ComboBoxItem>ИСП-1-23</ComboBoxItem>
               <ComboBoxItem>ИСП-2-23</ComboBoxItem>
               <ComboBoxItem>СД-1-23</ComboBoxItem>
@@ -31,7 +33,7 @@
           <Label Content="Предмет" FontSize="15" FontWeight="DemiBold" Margin="5,0,0,0"/>
           <ComboBox HorizontalAlignment="Stretch" SelectedIndex="-1"  Margin="5,0,5,5">
               
-              <ComboBoxItem></ComboBoxItem>
+              
               <ComboBoxItem>Рожновский</ComboBoxItem>
               <ComboBoxItem>Дядя гена</ComboBoxItem>
               <ComboBoxItem>Отец Щавинский</ComboBoxItem>
@@ -66,8 +68,8 @@
               </Grid>
           </Border>
           
-          <!--  -->
-          <Panel>
+          <!-- Область с кнопками -->
+          <StackPanel Orientation="Horizontal">
               <Button HorizontalAlignment="Left" 
                       Margin="5"
                       Content="Показать оценки"
@@ -78,7 +80,7 @@
                       Content="Показать сессии"
                       FontSize="14"
                       FontWeight="DemiBold"/>
-          </Panel>
+          </StackPanel>
           <Button HorizontalAlignment="Stretch"
                   Margin="5"
                   Content="Запланировать сессию"
@@ -88,6 +90,41 @@
           
       </StackPanel>
       
+      
+          <DataGrid Grid.Column="1" ItemsSource="{Binding People}" 
+                    AutoGenerateColumns="False" 
+                    Margin="20" Height="200" 
+                    HorizontalAlignment="Stretch" 
+                    VerticalAlignment="Top"
+                    GridLinesVisibility="All"
+                    Background="Black" >
+              
+              <DataGrid.Columns>
+                  <DataGridTextColumn Header="Студент" Binding="{Binding FullName}" Width="*"/>
+              </DataGrid.Columns>
+          </DataGrid>
+ 
+      
+      
   </Grid>
     
 </Window>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
