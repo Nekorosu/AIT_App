@@ -72,7 +72,7 @@
           <StackPanel Orientation="Horizontal">
               <Button HorizontalAlignment="Left" 
                       Margin="5"
-                      Content="Показать оценки"
+                      Content="Показать оценки" 
                       FontSize="14"
                       FontWeight="DemiBold"/>
               <Button HorizontalAlignment="Right" 
@@ -90,24 +90,20 @@
           
       </StackPanel>
       
-      
+      <!-- Таблица успеваемости студентов -->
           <DataGrid Grid.Column="1" ItemsSource="{Binding People}" 
                     AutoGenerateColumns="False" 
                     Margin="20" Height="200" 
                     HorizontalAlignment="Stretch" 
                     VerticalAlignment="Top"
-                    GridLinesVisibility="All"
-                    Background="Black" >
+                    GridLinesVisibility="All">
               
               <DataGrid.Columns>
                   <DataGridTextColumn Header="Студент" Binding="{Binding FullName}" Width="*"/>
               </DataGrid.Columns>
           </DataGrid>
- 
-      
       
   </Grid>
-    
 </Window>
 
 

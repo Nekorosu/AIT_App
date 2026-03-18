@@ -10,6 +10,7 @@ public partial class SessionReportViewModel : ObservableObject
 
     public SessionReportViewModel()
     {
+        
         People.Add(new Person("Студентов Игорь Викторович"));
         People.Add(new Person("Студентов Даниила Викторович"));
         People.Add(new Person("Первокурсник Гойда Александрович"));

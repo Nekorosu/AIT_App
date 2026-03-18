@@ -45,7 +45,7 @@
                                 <Button Width="250" Classes="accent" HorizontalAlignment="Center" Margin="5,5,5,0" HorizontalContentAlignment="Center" Content="Вход" Click="OpenSession_Click" />
                                 
                                 <Label Foreground="Black" Content="или" HorizontalAlignment="Center"/>
-                                <Button Width="200" Classes="subtle" HorizontalAlignment="Center" Margin="5,0,5,0" HorizontalContentAlignment="Center" Content="Войти другим способом" />
+                                <Button Width="200" Classes="subtle" HorizontalAlignment="Center" Margin="5,0,5,0" HorizontalContentAlignment="Center" Content="Войти другим способом" Click="Test_BD_Click" />
                                 
                             </StackPanel>
                     </Grid>
@@ -67,8 +67,6 @@
                             </Panel>
                             
                         </Grid>
-                    
-                    <DataGrid>
-                    </DataGrid>
+      
                 </Grid>
 </Window>

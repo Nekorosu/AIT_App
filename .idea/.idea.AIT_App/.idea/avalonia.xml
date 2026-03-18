@@ -4,7 +4,10 @@
     <option name="projectPerEditor">
       <map>
         <entry key="AIT_App/App.axaml" value="AIT_App/AIT_App.csproj" />
+        <entry key="AIT_App/AuthWindow.axaml" value="AIT_App/AIT_App.csproj" />
         <entry key="AIT_App/MainWindow.axaml" value="AIT_App/AIT_App.csproj" />
+        <entry key="AIT_App/Windows/Frontend/AuthWindow.axaml" value="AIT_App/AIT_App.csproj" />
+        <entry key="AIT_App/Windows/Frontend/SessionReport.axaml" value="AIT_App/AIT_App.csproj" />
       </map>
     </option>
   </component>
