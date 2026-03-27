@@ -19,5 +19,6 @@
  
 Подробный список задач — в [tasks.md](./tasks.md) и на [доске проекта](https://github.com/users/Nekorosu/projects/1).
 
-~~ Created by Claude.ai ~~
 ---
+
+~~ Created by Claude.ai ~~
