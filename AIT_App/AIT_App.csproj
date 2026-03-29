@@ -38,6 +38,14 @@
         <DependentUpon>SessionReport.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Windows\Backend\UserControls\HomeWindow\HomeWindow.axaml.cs">
+        <DependentUpon>HomeWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Windows\Backend\UserControls\AuthWindow\AuthWindow.axaml.cs">
+        <DependentUpon>AuthWindow.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <ItemGroup>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AIT_App")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddabf95d34d8a2df0392daae57a42beadb3a4c3c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea20166c25eba85bacaf560ea83cfbf5f440cb31")]
 [assembly: System.Reflection.AssemblyProductAttribute("AIT_App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AIT_App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

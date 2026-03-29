@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/geguh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj": {}
+    "/home/eugh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj": {}
   },
   "projects": {
-    "/home/geguh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj": {
+    "/home/eugh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/geguh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj",
+        "projectUniqueName": "/home/eugh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj",
         "projectName": "AIT_App",
-        "projectPath": "/home/geguh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj",
-        "packagesPath": "/home/geguh/.nuget/packages/",
-        "outputPath": "/home/geguh/RiderProjects/AIT_App/AIT_App/obj/",
+        "projectPath": "/home/eugh/RiderProjects/AIT_App/AIT_App/AIT_App.csproj",
+        "packagesPath": "/home/eugh/.nuget/packages/",
+        "outputPath": "/home/eugh/RiderProjects/AIT_App/AIT_App/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/geguh/.nuget/NuGet/NuGet.Config"
+          "/home/eugh/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net9.0": {
@@ -88,22 +88,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.14, 9.0.14]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.linux-x64",
-              "version": "[9.0.14, 9.0.14]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/eugh/.dotnet/sdk/9.0.312/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
