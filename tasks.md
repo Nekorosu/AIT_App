@@ -29,10 +29,10 @@
 *Строго по порядку — каждый шаг зависит от предыдущего.*
 
 ### 2.1 ConnectionStringService
-- [ *] 2.1.1 — [Код] Создать `Services/ConnectionStringService.cs`
-- [ *] 2.1.2 — [Код] Реализовать чтение строки из `config.json` (System.Text.Json)
-- [ *] 2.1.3 — [Код] Реализовать запись строки в `config.json`
-- [ *] 2.1.4 — [Код] Если `config.json` не найден — возвращать дефолтную строку подключения
+- [x] 2.1.1 — [Код] Создать `Services/ConnectionStringService.cs`
+- [x] 2.1.2 — [Код] Реализовать чтение строки из `config.json` (System.Text.Json)
+- [x] 2.1.3 — [Код] Реализовать запись строки в `config.json`
+- [x] 2.1.4 — [Код] Если `config.json` не найден — возвращать дефолтную строку подключения
 
 ### 2.2 DataBaseCon
 - [ ] 2.2.1 — [Код] Создать `Services/DataBaseCon.cs`
