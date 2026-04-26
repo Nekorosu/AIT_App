@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AIT_App.HomeWindow"
+        Title="AIT_App — Главное окно"
+        Width="1100"
+        Height="700"
+        MinWidth="900"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen">
+    <!-- ДИЗАЙНЕР: цвет боковой панели #1a1a2e; разметка рядом с .axaml.cs (Avalonia). -->
+    <Grid ColumnDefinitions="220,*">
+        <Border Grid.Column="0" Background="#1a1a2e" Padding="12">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                <StackPanel Grid.Row="0" Spacing="4">
+                    <TextBlock x:Name="WelcomeText"
+                               Text="Добро пожаловать"
+                               Foreground="White"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="RoleText"
+                               Foreground="#cfcfe8"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Spacing="8" VerticalAlignment="Top" Margin="0,16,0,0">
+                    <Button x:Name="NavJournal" Content="Журнал" HorizontalAlignment="Stretch" />
+                    <Button x:Name="NavSessionReport" Content="Отчёт по сессии" HorizontalAlignment="Stretch" />
+                    <Button x:Name="NavPlanSession" Content="План сессий" HorizontalAlignment="Stretch" />
+                    <Button x:Name="NavReports" Content="Отчёты" HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="8">
+                    <Button x:Name="BtnSettings" Content="Настройки" HorizontalAlignment="Stretch" />
+                    <Button x:Name="BtnLogout" Content="Выход" HorizontalAlignment="Stretch" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="1" Padding="12" Background="#f5f6fb">
+            <ContentControl x:Name="ContentArea" />
+        </Border>
+    </Grid>
+</Window>

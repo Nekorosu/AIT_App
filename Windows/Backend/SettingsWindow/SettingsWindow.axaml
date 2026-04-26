@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AIT_App.SettingsWindow"
+        Title="Настройки подключения"
+        Width="640"
+        Height="320"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+    <!-- ДИЗАЙНЕР: поле строки подключения — многострочное; разметка рядом с .axaml.cs (Avalonia). -->
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto" RowSpacing="12">
+        <TextBlock Text="Строка подключения (MySQL / MariaDB)" FontWeight="SemiBold" />
+        <TextBox x:Name="ConnectionTextBox"
+                 Grid.Row="1"
+                 TextWrapping="Wrap"
+                 MinHeight="140"
+                 Watermark="Server=...;Port=3306;Database=...;User=...;Password=...;" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button x:Name="BtnTest" Content="Проверить соединение" />
+            <Button x:Name="BtnSave" Content="Сохранить" />
+            <Button x:Name="BtnClose" Content="Закрыть" />
+        </StackPanel>
+    </Grid>
+</Window>
