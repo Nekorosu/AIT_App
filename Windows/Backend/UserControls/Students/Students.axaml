@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AIT_App.Students"
+             x:CompileBindings="False">
+
+    <Grid ColumnDefinitions="320,*" ColumnSpacing="12">
+
+        <!-- Левая панель: форма добавления / редактирования -->
+        <Border Grid.Column="0" Padding="12" CornerRadius="6" Background="White">
+            <StackPanel Spacing="10">
+                <TextBlock x:Name="FormTitle" Text="Добавить студента" FontWeight="SemiBold"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="ФИО"/>
+                    <TextBox x:Name="FioInput" Watermark="Иванов Иван Иванович"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Группа"/>
+                    <ComboBox x:Name="GroupCombo" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Телефон (необязательно)"/>
+                    <TextBox x:Name="PhoneInput" Watermark="+7 000 000 00 00"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="BtnSave" Content="Сохранить"/>
+                    <Button x:Name="BtnCancel" Content="Отмена" IsVisible="False"/>
+                </StackPanel>
+
+                <TextBlock Text="Для редактирования — выберите студента в таблице справа."
+                           TextWrapping="Wrap" FontSize="11" Foreground="#888"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Правая часть: таблица студентов -->
+        <Border Grid.Column="1" Padding="12" CornerRadius="6" Background="White">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                <TextBlock Grid.Row="0" Text="Список студентов" FontWeight="SemiBold"/>
+
+                <DataGrid x:Name="StudentsGrid" Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="All"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                        <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                        <DataGridTextColumn Header="Телефон" Binding="{Binding [Телефон]}" Width="130"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Кнопки под таблицей -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="BtnEdit" Content="Изменить выбранного"/>
+                    <Button x:Name="BtnDelete" Content="Удалить выбранного"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>

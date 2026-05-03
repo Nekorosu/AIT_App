@@ -1,44 +1,81 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AIT_App.HomeWindow"
-        Title="AIT_App — Главное окно"
-        Width="1100"
-        Height="700"
-        MinWidth="900"
-        MinHeight="560"
-        WindowStartupLocation="CenterScreen">
-    <!-- ДИЗАЙНЕР: цвет боковой панели #1a1a2e; разметка рядом с .axaml.cs (Avalonia). -->
-    <Grid ColumnDefinitions="220,*">
-        <Border Grid.Column="0" Background="#1a1a2e" Padding="12">
-            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
-                <StackPanel Grid.Row="0" Spacing="4">
-                    <TextBlock x:Name="WelcomeText"
-                               Text="Добро пожаловать"
-                               Foreground="White"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap" />
-                    <TextBlock x:Name="RoleText"
-                               Foreground="#cfcfe8"
-                               TextWrapping="Wrap" />
+        Title="Электронный журнал"
+        Width="1100" Height="680"
+        MinWidth="900" MinHeight="500">
+
+    <Grid ColumnDefinitions="200,*">
+
+        <!-- Боковая панель навигации -->
+        <Border Grid.Column="0" Background="#1a1a2e">
+            <DockPanel>
+
+                <!-- Верхняя часть: название и кнопки разделов -->
+                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,16,0,0">
+
+                    <!-- Заголовок приложения -->
+                    <TextBlock Text="Журнал" Foreground="White"
+                               FontSize="18" FontWeight="Bold"
+                               HorizontalAlignment="Center" Margin="0,0,0,16"/>
+
+                    <!-- Кнопки доступны всем ролям -->
+                    <Button x:Name="BtnJournal" Content="Журнал"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"/>
+
+                    <Button x:Name="BtnSessionReport" Content="Отчёт по сессии"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"/>
+
+                    <Button x:Name="BtnReports" Content="Доп. отчёты"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"/>
+
+                    <!-- Разделитель — ниже только для администрации (роль 1) -->
+                    <Border x:Name="AdminSeparator"
+                            Height="1" Background="#333355"
+                            Margin="16,8" IsVisible="False"/>
+
+                    <!-- Кнопки только для администрации -->
+                    <Button x:Name="BtnPlanSession" Content="План сессий"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"
+                            IsVisible="False"/>
+
+                    <Button x:Name="BtnStudents" Content="Студенты"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"
+                            IsVisible="False"/>
+
+                    <Button x:Name="BtnTeachers" Content="Преподаватели"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"
+                            IsVisible="False"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Spacing="8" VerticalAlignment="Top" Margin="0,16,0,0">
-                    <Button x:Name="NavJournal" Content="Журнал" HorizontalAlignment="Stretch" />
-                    <Button x:Name="NavSessionReport" Content="Отчёт по сессии" HorizontalAlignment="Stretch" />
-                    <Button x:Name="NavPlanSession" Content="План сессий" HorizontalAlignment="Stretch" />
-                    <Button x:Name="NavReports" Content="Отчёты" HorizontalAlignment="Stretch" />
+                <!-- Нижняя часть: информация о пользователе, настройки, выход -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,12" Spacing="4">
+                    <TextBlock x:Name="UserLabel" Foreground="#aaaaaa"
+                               FontSize="12" HorizontalAlignment="Center"
+                               Margin="8,4"/>
+
+                    <Button x:Name="BtnSettings" Content="Настройки"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"/>
+
+                    <Button x:Name="BtnLogout" Content="Выход"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                            Padding="16,10" Margin="8,2"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Spacing="8">
-                    <Button x:Name="BtnSettings" Content="Настройки" HorizontalAlignment="Stretch" />
-                    <Button x:Name="BtnLogout" Content="Выход" HorizontalAlignment="Stretch" />
-                </StackPanel>
-            </Grid>
+            </DockPanel>
         </Border>
 
-        <Border Grid.Column="1" Padding="12" Background="#f5f6fb">
-            <ContentControl x:Name="ContentArea" />
+        <!-- Основная область — сюда подставляется выбранный раздел -->
+        <Border Grid.Column="1" Padding="16" Background="#f5f5f5">
+            <ContentControl x:Name="MainContent"/>
         </Border>
+
     </Grid>
 </Window>

@@ -1,59 +1,67 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AIT_App.PlanSession">
-    <!-- ДИЗАЙНЕР: форма слева, таблица справа; разметка рядом с PlanSession.axaml.cs (Avalonia).
-         Добавлено: «Изменить выбранное» + панель режима редактирования. -->
-    <Grid ColumnDefinitions="320,*" ColumnSpacing="12">
-        <Border Grid.Column="0" Padding="12" CornerRadius="8" Background="White">
+             x:Class="AIT_App.PlanSession"
+             x:CompileBindings="False">
+
+    <Grid ColumnDefinitions="300,*" ColumnSpacing="12">
+
+        <!-- Левая панель: форма добавления / редактирования -->
+        <Border Grid.Column="0" Padding="12" CornerRadius="6" Background="White">
             <StackPanel Spacing="10">
-                <TextBlock Text="Планирование сессии" FontWeight="SemiBold" />
+                <TextBlock Text="Планирование сессий" FontWeight="SemiBold"/>
 
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Предмет" />
-                    <ComboBox x:Name="SubjectCombo" />
+                    <TextBlock Text="Предмет"/>
+                    <ComboBox x:Name="SubjectCombo" HorizontalAlignment="Stretch"/>
                 </StackPanel>
 
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Дата сессии" />
-                    <CalendarDatePicker x:Name="SessionDatePicker" />
+                    <TextBlock Text="Дата сессии"/>
+                    <CalendarDatePicker x:Name="SessionDatePicker"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Button x:Name="BtnAdd" Content="Добавить" />
-                    <Button x:Name="BtnEdit" Content="Изменить выбранное" />
-                    <Button x:Name="BtnDelete" Content="Удалить выбранное" />
-                </StackPanel>
+                <!-- Кнопки управления -->
+                <WrapPanel Orientation="Horizontal">
+                    <Button x:Name="BtnAdd" Content="Добавить" Margin="0,0,8,8"/>
+                    <Button x:Name="BtnEdit" Content="Изменить выбранное" Margin="0,0,8,8"/>
+                    <Button x:Name="BtnDelete" Content="Удалить выбранное" Margin="0,0,8,8"/>
+                </WrapPanel>
 
-                <!-- Появляется в режиме редактирования (выбрали строку → кнопка «Изменить») -->
-                <Border x:Name="EditModeBar"
-                        Padding="8"
-                        CornerRadius="6"
-                        Background="#fff7e6"
-                        IsVisible="False">
+                <!-- Панель режима редактирования — видна только при нажатии "Изменить" -->
+                <Border x:Name="EditModeBar" Padding="8" CornerRadius="4"
+                        Background="#fff3cd" IsVisible="False">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Режим редактирования"
-                                   FontWeight="SemiBold"
-                                   Foreground="#a06000" />
-                        <TextBlock x:Name="EditModeStatus"
-                                   TextWrapping="Wrap"
-                                   FontSize="12" />
+                        <TextBlock Text="Режим редактирования" FontWeight="SemiBold" Foreground="#856404"/>
+                        <TextBlock x:Name="EditModeLabel" TextWrapping="Wrap" FontSize="12"/>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="BtnSaveEdit" Content="Сохранить" Classes="accent" />
-                            <Button x:Name="BtnCancelEdit" Content="Отмена" />
+                            <Button x:Name="BtnSaveEdit" Content="Сохранить"/>
+                            <Button x:Name="BtnCancelEdit" Content="Отмена"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <!-- После добавления/удаления вызывается sp_UpdateGradeTypes() для пересчёта типов оценок. -->
+                <!-- Пояснение: почему важно планировать сессии -->
+                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#666"
+                           Text="После добавления или удаления сессии система автоматически переклассифицирует оценки (Текущая / Экзаменационная)."/>
             </StackPanel>
         </Border>
 
-        <Border Grid.Column="1" Padding="12" CornerRadius="8" Background="White">
-            <DataGrid x:Name="SessionsGrid"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      GridLinesVisibility="All"
-                      HeadersVisibility="Column" />
+        <!-- Правая часть: таблица запланированных сессий -->
+        <Border Grid.Column="1" Padding="12" CornerRadius="6" Background="White">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Запланированные сессии" FontWeight="SemiBold"/>
+                <DataGrid x:Name="SessionsGrid"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="All"
+                          HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Предмет" Binding="{Binding [Предмет]}" Width="*"/>
+                        <DataGridTextColumn Header="Дата сессии" Binding="{Binding [ДатаСессии]}" Width="150"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </StackPanel>
         </Border>
+
     </Grid>
 </UserControl>

@@ -1,6 +1,5 @@
-using System.Collections.ObjectModel;
-using AIT_App.Services;
-using Avalonia;
+using System;
+using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -8,160 +7,149 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using AIT_App.Services;
 
-namespace AIT_App;
-
-// ТЕСТИРОВЩИК: проверьте вход teacher/2222, неверный пароль, недоступную БД,
-// анимацию статуса, иконки check/exclamation, Enter в поле пароля = вход.
-public partial class AuthWindow : Window
+namespace AIT_App
 {
-    private DataBaseCon _db = new();
-    private DispatcherTimer? _dotsTimer;
-    private int _dotsPhase;
-
-    public AuthWindow()
+    // Окно авторизации — первое что видит пользователь.
+    // При открытии проверяет соединение с БД и загружает список логинов.
+    public partial class AuthWindow : Window
     {
-        InitializeComponent();
-        // КОДЕР: без этого дизайнер Rider может падать на async к БД.
-        if (!IsDesignMode)
-            Opened += OnOpened;
-    }
+        private DataBaseCon _db = new DataBaseCon();
+        private DispatcherTimer _dotsTimer; // таймер для анимации точек
+        private int _dotsCount = 0;         // счётчик точек (0..3)
 
-    private static bool IsDesignMode => Avalonia.Controls.Design.IsDesignMode;
-
-    private async void OnOpened(object? sender, EventArgs e)
-    {
-        LoginButton.Click += OnLoginClick;
-        // ДИЗАЙНЕР: Enter в поле пароля = клик по кнопке «Вход».
-        PasswordInput.KeyDown += (_, args) =>
+        public AuthWindow()
         {
-            if (args.Key == Key.Enter && LoginButton.IsEnabled)
-                OnLoginClick(this, new RoutedEventArgs());
-        };
+            InitializeComponent();
 
-        StartDotsAnimation();
-
-        // КОДЕР: перечитываем строку каждый раз — SettingsWindow мог её поменять.
-        _db = new DataBaseCon(ConnectionStringService.Load());
-        var (ok, message) = await _db.ConnectionCheckAsync();
-        StopDotsAnimation();
-
-        ConnectionStatusText.Text = ok
-            ? "Соединение установлено"
-            : "Нет соединения с БД: " + (message ?? "неизвестная ошибка");
-        ConnectionIcon.IsVisible = true;
-        ConnectionIcon.Source = ok
-            ? new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/check.png")))
-            : new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/exclamation.png")));
-
-        LoginButton.IsEnabled = ok;
-        if (ok)
-            await LoadLoginsAsync();
-    }
-
-    private void StartDotsAnimation()
-    {
-        _dotsPhase = 0;
-        _dotsTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(450) };
-        _dotsTimer.Tick += (_, _) =>
-        {
-            _dotsPhase = (_dotsPhase + 1) % 4;
-            var suffix = _dotsPhase switch { 0 => "", 1 => ".", 2 => "..", _ => "..." };
-            ConnectionStatusText.Text = "Проверка соединения" + suffix;
-        };
-        _dotsTimer.Start();
-    }
-
-    private void StopDotsAnimation()
-    {
-        _dotsTimer?.Stop();
-        _dotsTimer = null;
-    }
-
-    private async Task LoadLoginsAsync()
-    {
-        const string sql = "SELECT `Логин` FROM `Данные_авторизации` ORDER BY `Логин`";
-        var table = await _db.ExecuteQueryAsync(sql);
-        var list = new ObservableCollection<string>();
-        if (table != null)
-        {
-            foreach (System.Data.DataRow row in table.Rows)
+            // Не запускаем обращения к БД в режиме дизайнера Rider
+            if (!Avalonia.Controls.Design.IsDesignMode)
             {
-                var login = row["Логин"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(login))
-                    list.Add(login!);
+                Opened += OnWindowOpened;
             }
         }
-        else
+
+        // Срабатывает когда окно полностью открылось
+        private async void OnWindowOpened(object sender, EventArgs e)
         {
-            await Dialogs.ErrorAsync("Вход",
-                "Не удалось загрузить логины: " + (_db.LastError ?? "неизвестная ошибка"));
+            // Привязываем Enter в поле пароля к кнопке входа
+            PasswordInput.KeyDown += (s, args) =>
+            {
+                if (args.Key == Key.Enter)
+                    OnLoginClick(this, new RoutedEventArgs());
+            };
+
+            LoginButton.Click += OnLoginClick;
+
+            // Запускаем анимацию точек пока идёт проверка
+            StartDotsAnimation();
+
+            // Task.Run нужен чтобы UI не завис во время проверки соединения
+            var (ok, error) = await System.Threading.Tasks.Task.Run(() => _db.ConnectionCheck());
+
+            StopDotsAnimation();
+
+            if (ok)
+            {
+                // Соединение успешно — показываем иконку галочки и загружаем логины
+                ConnectionStatusText.Text = "Соединение установлено";
+                ConnectionIcon.IsVisible = true;
+                ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/check.png")));
+                LoginButton.IsEnabled = true;
+                LoadLogins();
+            }
+            else
+            {
+                // Соединение не удалось — показываем ошибку
+                ConnectionStatusText.Text = "Нет соединения: " + error;
+                ConnectionIcon.IsVisible = true;
+                ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/check.png")));
+                LoginButton.IsEnabled = false;
+            }
         }
 
-        LoginCombo.ItemsSource = list;
-        if (list.Count > 0)
-            LoginCombo.SelectedIndex = 0;
-    }
-
-    private async void OnLoginClick(object? sender, RoutedEventArgs e)
-    {
-        var login = LoginCombo.SelectedItem as string ?? LoginCombo.Text?.Trim();
-        var password = PasswordInput.Text ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+        // Запускает анимацию "Подключение..." -> "Подключение." -> ".." -> "..."
+        private void StartDotsAnimation()
         {
-            await Dialogs.WarnAsync("Вход", "Укажите логин и пароль.");
-            return;
+            _dotsCount = 0;
+            _dotsTimer = new DispatcherTimer();
+            _dotsTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _dotsTimer.Tick += (s, e) =>
+            {
+                _dotsCount = (_dotsCount + 1) % 4;
+                string dots = new string('.', _dotsCount);
+                ConnectionStatusText.Text = "Проверка соединения" + dots;
+            };
+            _dotsTimer.Start();
         }
 
-        const string sql =
-            "SELECT `Роль` FROM `Данные_авторизации` WHERE `Логин`=@login AND `Пароль`=@password LIMIT 1";
-        var roleObj = await _db.ExecuteScalarAsync(sql, new Dictionary<string, object?>
+        private void StopDotsAnimation()
         {
-            ["login"] = login,
-            ["password"] = password
-        });
-
-        if (_db.LastError != null)
-        {
-            await Dialogs.ErrorAsync("Вход", "Ошибка БД: " + _db.LastError);
-            return;
+            _dotsTimer?.Stop();
+            _dotsTimer = null;
         }
 
-        if (roleObj is null or DBNull)
+        // Загружает список логинов из таблицы Данные_авторизации в ComboBox
+        private void LoadLogins()
         {
-            await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
-            return;
+            string sql = "SELECT `Логин` FROM `Данные_авторизации` ORDER BY `Логин`";
+            var table = _db.ExecuteQuery(sql);
+
+            if (table == null)
+            {
+                _ = Dialogs.ErrorAsync("Ошибка", "Не удалось загрузить список пользователей.");
+                return;
+            }
+
+            var logins = new System.Collections.Generic.List<string>();
+            foreach (System.Data.DataRow row in table.Rows)
+                logins.Add(row["Логин"].ToString());
+
+            LoginCombo.ItemsSource = logins;
+            if (logins.Count > 0)
+                LoginCombo.SelectedIndex = 0;
         }
 
-        int role;
-        try
+        // Обработчик нажатия кнопки "Вход"
+        private async void OnLoginClick(object sender, RoutedEventArgs e)
         {
-            role = Convert.ToInt32(roleObj, System.Globalization.CultureInfo.InvariantCulture);
-        }
-        catch (Exception ex)
-        {
-            await Dialogs.ErrorAsync("Вход", "Не удалось прочитать роль из БД: " + ex.Message);
-            return;
-        }
+            string login = LoginCombo.SelectedItem as string ?? LoginCombo.Text?.Trim();
+            string password = PasswordInput.Text ?? "";
 
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
-            return;
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            {
+                await Dialogs.WarnAsync("Вход", "Введите логин и пароль.");
+                return;
+            }
 
-        HomeWindow home;
-        try
-        {
-            home = new HomeWindow(login!, role);
-        }
-        catch (Exception ex)
-        {
-            await Dialogs.ErrorAsync("Вход", "Ошибка при открытии главного окна: " + ex.Message);
-            return;
-        }
+            // Проверяем логин и пароль в БД, получаем роль пользователя
+            string sql = "SELECT `Роль` FROM `Данные_авторизации` WHERE `Логин`=@login AND `Пароль`=@password LIMIT 1";
+            var result = _db.ExecuteScalar(sql, new Dictionary<string, object>
+            {
+                { "login", login },
+                { "password", password }
+            });
 
-        // КОДЕР: сначала Show(), затем MainWindow, затем Close — иначе classic desktop может завершить процесс,
-        // пока новое главное окно ещё не отображено.
-        home.Show();
-        desktop.MainWindow = home;
-        Close();
+            if (result == null)
+            {
+                // Пользователь с таким логином/паролем не найден
+                await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
+                return;
+            }
+
+            // Преобразуем роль из БД в число
+            int role = Convert.ToInt32(result);
+
+            // Открываем главное окно, передаём логин и роль
+            var homeWindow = new HomeWindow(login, role);
+            homeWindow.Show();
+
+            // Меняем главное окно приложения и закрываем авторизацию
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                desktop.MainWindow = homeWindow;
+
+            this.Close();
+        }
     }
 }

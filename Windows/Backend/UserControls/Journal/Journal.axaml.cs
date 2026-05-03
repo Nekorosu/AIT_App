@@ -1,522 +1,440 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
-using AIT_App.Services;
 using Avalonia.Controls;
-using Avalonia.Data;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using AIT_App.Services;
 
-namespace AIT_App;
-
-// ТЕСТИРОВЩИК: журнал — фильтры, pivot, добавление (дубликат 1062), удаление выделенной оценки,
-// изменение оценки кликом по ячейке, триггер типа «Экзаменационная», экспорт xlsx.
-public partial class Journal : UserControl
+namespace AIT_App
 {
-    private readonly DataBaseCon _db = new();
-    private DataTable? _lastPivot;
-
-    // Карта «строка-заголовок колонки → DateTime». Заполняется при построении pivot.
-    private readonly Dictionary<string, DateTime> _columnDateMap = new();
-
-    // Состояние выделенной для редактирования оценки.
-    private string? _selectedStudent;
-    private DateTime? _selectedDate;
-    private string? _selectedCurrentGrade;
-
-    public Journal()
+    // Раздел "Журнал" — просмотр и редактирование оценок.
+    // Таблица плоская: одна строка = одна оценка (ФИО, Предмет, Дата, Оценка, Тип).
+    //
+    // Клавиатурные сокращения в таблице:
+    //   Стрелки ↑↓ — перемещение по строкам
+    //   2 3 4 5    — выставить оценку выделенной строке
+    //   Н (или H)  — выставить "Н" (не явился)
+    public partial class Journal : UserControl
     {
-        InitializeComponent();
-        TypeFilterCombo.ItemsSource = new[] { "Все", "Текущая", "Экзаменационная" };
-        TypeFilterCombo.SelectedIndex = 0;
+        private DataBaseCon _db = new DataBaseCon();
 
-        GroupCombo.SelectionChanged += async (_, _) => { ClearSelection(); await OnGroupChangedAsync(); };
-        SubjectCombo.SelectionChanged += (_, _) => ClearSelection();
-        TypeFilterCombo.SelectionChanged += (_, _) => ClearSelection();
+        // Последняя загруженная таблица — нужна для экспорта
+        private DataTable _currentTable = null;
 
-        BtnLoad.Click += async (_, _) => await LoadJournalAsync();
-        BtnToggleAdd.Click += (_, _) =>
+        public Journal()
+        {
+            InitializeComponent();
+
+            // Заполняем фильтр типов оценок
+            TypeCombo.ItemsSource = new[] { "Все", "Текущая", "Экзаменационная" };
+            TypeCombo.SelectedIndex = 0;
+
+            // При смене группы — перезагружаем список предметов
+            GroupCombo.SelectionChanged += (s, e) => LoadSubjects();
+
+            // Привязываем кнопки
+            BtnLoad.Click += (s, e) => LoadJournal();
+            BtnToggleAdd.Click += OnToggleAddClick;
+            BtnAdd.Click += (s, e) => AddGrade();
+            BtnExport.Click += OnExportClick;
+
+            BtnSaveEdit.Click += (s, e) => SaveEdit();
+            BtnDelete.Click += (s, e) => DeleteSelected();
+            BtnCancelEdit.Click += (s, e) => HideEditPanel();
+
+            // При клике на строку — показываем панель редактирования
+            JournalGrid.SelectionChanged += OnGridSelectionChanged;
+
+            // Клавиатурный ввод оценок
+            JournalGrid.KeyDown += OnGridKeyDown;
+
+            // Загружаем данные при открытии раздела
+            LoadGroups();
+            LoadGradeValues();
+        }
+
+        // Загружает список групп из БД
+        private void LoadGroups()
+        {
+            string sql = "SELECT `Название группы` FROM `Группы` ORDER BY `Название группы`";
+            var table = _db.ExecuteQuery(sql);
+
+            if (table == null)
+            {
+                _ = Dialogs.ErrorAsync("Журнал", "Не удалось загрузить группы.");
+                return;
+            }
+
+            var groups = new List<string>();
+            foreach (DataRow row in table.Rows)
+                groups.Add(row["Название группы"].ToString());
+
+            GroupCombo.ItemsSource = groups;
+        }
+
+        // Загружает предметы для выбранной группы
+        private void LoadSubjects()
+        {
+            SubjectCombo.ItemsSource = null;
+            SubjectCombo.IsEnabled = false;
+
+            string group = GroupCombo.SelectedItem as string;
+            if (string.IsNullOrEmpty(group)) return;
+
+            // Берём только предметы у которых есть оценки в этой группе
+            string sql = @"
+                SELECT DISTINCT a.`Предмет`
+                FROM `Аттестация` a
+                INNER JOIN `Ученики` u ON a.`Номер студента` = u.`ID`
+                WHERE u.`Группа` = @group
+                ORDER BY a.`Предмет`";
+
+            var table = _db.ExecuteQuery(sql, new Dictionary<string, object> { { "group", group } });
+
+            if (table == null || table.Rows.Count == 0)
+            {
+                // Если оценок нет — показываем все предметы
+                sql = "SELECT `Название` FROM `Дисциплины` ORDER BY `Название`";
+                table = _db.ExecuteQuery(sql);
+            }
+
+            var subjects = new List<string>();
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    subjects.Add(row[0].ToString());
+
+            SubjectCombo.ItemsSource = subjects;
+            SubjectCombo.IsEnabled = subjects.Count > 0;
+
+            // Обновляем комбобокс предметов в форме добавления
+            AddSubjectCombo.ItemsSource = subjects;
+            LoadStudents(group);
+        }
+
+        // Загружает студентов группы для формы добавления
+        private void LoadStudents(string group)
+        {
+            string sql = "SELECT `ФИО` FROM `Ученики` WHERE `Группа`=@group ORDER BY `ФИО`";
+            var table = _db.ExecuteQuery(sql, new Dictionary<string, object> { { "group", group } });
+
+            var students = new List<string>();
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    students.Add(row["ФИО"].ToString());
+
+            AddStudentCombo.ItemsSource = students;
+        }
+
+        // Загружает допустимые значения оценок из БД
+        private void LoadGradeValues()
+        {
+            string sql = "SELECT `Значение поля` FROM `Оценки` ORDER BY `Значение поля`";
+            var table = _db.ExecuteQuery(sql);
+
+            var grades = new List<string>();
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    grades.Add(row["Значение поля"].ToString());
+
+            AddGradeCombo.ItemsSource = grades;
+            EditGradeCombo.ItemsSource = grades;
+        }
+
+        // Загружает оценки в таблицу по выбранным фильтрам
+        private void LoadJournal()
+        {
+            HideEditPanel();
+
+            string group = GroupCombo.SelectedItem as string;
+            string subject = SubjectCombo.SelectedItem as string;
+
+            if (string.IsNullOrEmpty(group) || string.IsNullOrEmpty(subject))
+            {
+                _ = Dialogs.WarnAsync("Журнал", "Выберите группу и предмет.");
+                return;
+            }
+
+            string type = TypeCombo.SelectedItem as string ?? "Все";
+
+            // Строим запрос — если тип "Все", условие по типу не добавляем
+            string sql = @"
+                SELECT
+                    u.`ФИО`,
+                    a.`Предмет`,
+                    a.`Дата`,
+                    a.`Оценка`,
+                    a.`Тип`
+                FROM `Аттестация` a
+                INNER JOIN `Ученики` u ON a.`Номер студента` = u.`ID`
+                WHERE u.`Группа` = @group
+                  AND a.`Предмет` = @subject"
+                + (type != "Все" ? " AND a.`Тип` = @type" : "")
+                + " ORDER BY u.`ФИО`, a.`Дата`";
+
+            var parameters = new Dictionary<string, object>
+            {
+                { "group", group },
+                { "subject", subject }
+            };
+            if (type != "Все")
+                parameters.Add("type", type);
+
+            var table = _db.ExecuteQuery(sql, parameters);
+
+            if (table == null)
+            {
+                _ = Dialogs.ErrorAsync("Журнал", "Не удалось загрузить данные.");
+                return;
+            }
+
+            _currentTable = table;
+            JournalGrid.ItemsSource = DataBaseCon.ToRowList(table);
+
+            StatusLabel.Text = $"Загружено записей: {table.Rows.Count}";
+        }
+
+        // Показывает / скрывает панель добавления оценки
+        private void OnToggleAddClick(object sender, RoutedEventArgs e)
         {
             AddPanel.IsVisible = !AddPanel.IsVisible;
-            if (AddPanel.IsVisible) ClearSelection();
-        };
-        BtnAddGrade.Click += async (_, _) => await AddGradeAsync();
-        BtnExport.Click += async (_, _) => await ExportAsync();
-
-        // Клик по ячейке — выделяем оценку для правки/удаления.
-        JournalGrid.CellPointerPressed += OnCellPressed;
-        BtnSaveEdit.Click += async (_, _) => await SaveEditAsync();
-        BtnDeleteSelected.Click += async (_, _) => await DeleteSelectedAsync();
-        BtnCancelSelection.Click += (_, _) => ClearSelection();
-
-        Loaded += async (_, _) => await InitAsync();
-    }
-
-    private async Task InitAsync()
-    {
-        await LoadGroupsAsync();
-        await LoadGradeValuesAsync();
-    }
-
-    private async Task LoadGroupsAsync()
-    {
-        const string sql = "SELECT `Название группы` FROM `Группы` ORDER BY `Название группы`";
-        var table = await _db.ExecuteQueryAsync(sql);
-        if (table == null)
-        {
-            await Dialogs.ErrorAsync("Журнал", "Не удалось загрузить группы: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-        GroupCombo.ItemsSource = ToStringList(table, "Название группы");
-    }
-
-    private static List<string> ToStringList(DataTable? table, string column)
-    {
-        var list = new List<string>();
-        if (table == null)
-            return list;
-        foreach (DataRow row in table.Rows)
-        {
-            var v = row[column]?.ToString();
-            if (!string.IsNullOrWhiteSpace(v))
-                list.Add(v!);
+            if (AddPanel.IsVisible)
+                HideEditPanel();
         }
 
-        return list;
-    }
-
-    private async Task OnGroupChangedAsync()
-    {
-        SubjectCombo.ItemsSource = null;
-        SubjectCombo.SelectedItem = null;
-        SubjectCombo.IsEnabled = false;
-        var group = GroupCombo.SelectedItem as string;
-        if (string.IsNullOrWhiteSpace(group))
-            return;
-
-        const string sql =
-            """
-            SELECT DISTINCT d.`Название`
-            FROM `Дисциплины` d
-            ORDER BY d.`Название`
-            """;
-        var table = await _db.ExecuteQueryAsync(sql);
-        var subjects = ToStringList(table, "Название");
-        SubjectCombo.ItemsSource = subjects;
-        SubjectCombo.IsEnabled = subjects.Count > 0;
-        AddStudentCombo.ItemsSource = await LoadStudentsForGroupAsync(group);
-    }
-
-    private async Task<List<string>> LoadStudentsForGroupAsync(string group)
-    {
-        const string sql = "SELECT `ФИО` FROM `Ученики` WHERE `Группа`=@g ORDER BY `ФИО`";
-        var table = await _db.ExecuteQueryAsync(sql, new Dictionary<string, object?> { ["g"] = group });
-        return ToStringList(table, "ФИО");
-    }
-
-    private async Task LoadGradeValuesAsync()
-    {
-        const string sql = "SELECT `Значение поля` FROM `Оценки` ORDER BY `Значение поля`";
-        var table = await _db.ExecuteQueryAsync(sql);
-        var grades = ToStringList(table, "Значение поля");
-        AddGradeCombo.ItemsSource = grades;
-        EditGradeCombo.ItemsSource = grades;
-    }
-
-    private async Task LoadJournalAsync()
-    {
-        ClearSelection();
-
-        var group = GroupCombo.SelectedItem as string;
-        var subject = SubjectCombo.SelectedItem as string;
-        if (string.IsNullOrWhiteSpace(group) || string.IsNullOrWhiteSpace(subject))
+        // Добавляет новую оценку в БД
+        private async void AddGrade()
         {
-            await Dialogs.WarnAsync("Журнал", "Выберите группу и предмет.");
-            return;
-        }
+            string studentName = AddStudentCombo.SelectedItem as string;
+            string subject = AddSubjectCombo.SelectedItem as string;
+            string grade = AddGradeCombo.SelectedItem as string;
+            var date = AddDatePicker.SelectedDate?.Date;
 
-        var typeFilter = TypeFilterCombo.SelectedItem as string ?? "Все";
-
-        const string sql =
-            """
-            SELECT u.`ФИО` AS `ФИО`, u.`ID` AS `ID студента`, a.`Дата` AS `Дата`, o.`Значение поля` AS `Оценка`, a.`Тип` AS `Тип`
-            FROM `Ученики` u
-            LEFT JOIN `Аттестация` a
-              ON a.`Номер студента` = u.`ID`
-             AND a.`Предмет` = @subject
-             AND (@allTypes = 1 OR a.`Тип` = @type)
-            LEFT JOIN `Оценки` o ON a.`Оценка` = o.`Значение поля`
-            WHERE u.`Группа` = @group
-            ORDER BY u.`ФИО`, a.`Дата`
-            """;
-
-        var allTypes = typeFilter == "Все" ? 1 : 0;
-        var table = await _db.ExecuteQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["group"] = group,
-            ["subject"] = subject,
-            ["allTypes"] = allTypes,
-            ["type"] = typeFilter == "Все" ? (object)DBNull.Value : typeFilter
-        });
-
-        if (table == null)
-        {
-            await Dialogs.ErrorAsync("Журнал",
-                "Не удалось выполнить запрос: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        var pivot = BuildPivot(table);
-        _lastPivot = pivot;
-
-        // Заполняем карту дат для обработки клика по ячейке.
-        _columnDateMap.Clear();
-        foreach (DataColumn col in pivot.Columns)
-        {
-            if (col.ColumnName == "ФИО")
-                continue;
-            if (DateTime.TryParse(col.ColumnName, out var dt))
-                _columnDateMap[col.ColumnName] = dt.Date;
-        }
-
-        ConfigureGridColumns(JournalGrid, pivot);
-        JournalGrid.ItemsSource = pivot.DefaultView;
-        JournalHint.Text = $"Строк: {pivot.Rows.Count}, колонок: {pivot.Columns.Count}. Клик по ячейке — изменить или удалить оценку.";
-
-        AddSubjectCombo.ItemsSource = SubjectCombo.ItemsSource;
-        AddSubjectCombo.SelectedItem = subject;
-        AddStudentCombo.ItemsSource = await LoadStudentsForGroupAsync(group);
-    }
-
-    private static DataTable BuildPivot(DataTable flat)
-    {
-        var studentNames = new List<string>();
-        var studentIds = new Dictionary<string, int>();
-        var dates = new SortedSet<DateTime>();
-
-        foreach (DataRow row in flat.Rows)
-        {
-            var name = row["ФИО"]?.ToString() ?? "";
-            if (string.IsNullOrWhiteSpace(name))
-                continue;
-            if (!studentIds.ContainsKey(name))
+            if (string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(subject)
+                || string.IsNullOrEmpty(grade) || date == null)
             {
-                if (row["ID студента"] == DBNull.Value)
-                    continue;
-                studentIds[name] = Convert.ToInt32(row["ID студента"]);
-                studentNames.Add(name);
+                await Dialogs.WarnAsync("Добавление", "Заполните все поля.");
+                return;
             }
 
-            if (row["Дата"] != DBNull.Value && row["Дата"] is DateTime dt)
-                dates.Add(dt.Date);
-        }
-
-        var pivot = new DataTable();
-        pivot.Columns.Add("ФИО", typeof(string));
-        foreach (var d in dates)
-            pivot.Columns.Add(d.ToString("yyyy-MM-dd"), typeof(string));
-
-        var cellMap = new Dictionary<(string Student, DateTime Date), string>();
-        foreach (DataRow row in flat.Rows)
-        {
-            var name = row["ФИО"]?.ToString();
-            if (string.IsNullOrWhiteSpace(name) || row["Дата"] == DBNull.Value)
-                continue;
-            var date = Convert.ToDateTime(row["Дата"]).Date;
-            var grade = row["Оценка"]?.ToString() ?? "";
-            var cell = string.IsNullOrWhiteSpace(grade) ? "" : grade;
-            cellMap[(name!, date)] = cell;
-        }
-
-        foreach (var name in studentNames.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
-        {
-            var r = pivot.NewRow();
-            r["ФИО"] = name;
-            foreach (DataColumn col in pivot.Columns)
+            // Получаем ID студента по ФИО и группе
+            string group = GroupCombo.SelectedItem as string;
+            int? studentId = GetStudentId(studentName, group);
+            if (studentId == null)
             {
-                if (col.ColumnName == "ФИО")
-                    continue;
-                if (DateTime.TryParse(col.ColumnName, out var day))
-                    r[col] = cellMap.TryGetValue((name, day.Date), out var g) ? g : (object)string.Empty;
+                await Dialogs.ErrorAsync("Добавление", "Студент не найден в базе данных.");
+                return;
             }
 
-            pivot.Rows.Add(r);
-        }
+            string sql = @"
+                INSERT INTO `Аттестация` (`Оценка`, `Предмет`, `Номер студента`, `Дата`)
+                VALUES (@grade, @subject, @studentId, @date)";
 
-        return pivot;
-    }
-
-    private static void ConfigureGridColumns(DataGrid grid, DataTable table)
-    {
-        grid.Columns.Clear();
-        foreach (DataColumn col in table.Columns)
-        {
-            grid.Columns.Add(new DataGridTextColumn
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
             {
-                Header = col.ColumnName,
-                Binding = new Binding
-                {
-                    Path = ".",
-                    Converter = DataRowColumnValueConverter.Instance,
-                    ConverterParameter = col.ColumnName
-                }
+                { "grade", grade },
+                { "subject", subject },
+                { "studentId", studentId },
+                { "date", date }
             });
-        }
-    }
 
-    // ===== Клик по ячейке + правка/удаление =====
-
-    private void OnCellPressed(object? sender, DataGridCellPointerPressedEventArgs e)
-    {
-        if (e.Column.Header is not string colHeader)
-            return;
-
-        // Клик по колонке «ФИО» — не оценка, сбрасываем выделение.
-        if (colHeader == "ФИО")
-        {
-            ClearSelection();
-            return;
+            if (result == -2)
+                await Dialogs.WarnAsync("Добавление", "Оценка за этот день уже существует.");
+            else if (result < 0)
+                await Dialogs.ErrorAsync("Добавление", "Ошибка при сохранении в базу данных.");
+            else
+                LoadJournal(); // перезагружаем таблицу
         }
 
-        if (!_columnDateMap.TryGetValue(colHeader, out var date))
+        // Срабатывает когда пользователь выбирает строку в таблице
+        private void OnGridSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ClearSelection();
-            return;
+            if (JournalGrid.SelectedItem is Dictionary<string, object> row)
+            {
+                // Показываем панель редактирования с данными выбранной строки
+                string fio = row["ФИО"]?.ToString();
+                string subject = row["Предмет"]?.ToString();
+                string grade = row["Оценка"]?.ToString();
+                string dateStr = row["Дата"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+
+                EditStatusLabel.Text = $"{fio} · {subject} · {dateStr} · оценка: {grade}";
+                EditGradeCombo.SelectedItem = grade;
+                BtnSaveEdit.IsEnabled = true;
+                BtnDelete.IsEnabled = true;
+                EditPanel.IsVisible = true;
+            }
         }
 
-        if (e.Row.DataContext is not DataRowView drv)
-            return;
-
-        var student = drv["ФИО"]?.ToString();
-        if (string.IsNullOrWhiteSpace(student))
+        // Обработчик клавиш в таблице — 2,3,4,5 или Н выставляют оценку
+        private async void OnGridKeyDown(object sender, KeyEventArgs e)
         {
-            ClearSelection();
-            return;
+            // Определяем какая оценка соответствует нажатой клавише
+            string grade = null;
+
+            if (e.Key == Key.D2 || e.Key == Key.NumPad2) grade = "2";
+            else if (e.Key == Key.D3 || e.Key == Key.NumPad3) grade = "3";
+            else if (e.Key == Key.D4 || e.Key == Key.NumPad4) grade = "4";
+            else if (e.Key == Key.D5 || e.Key == Key.NumPad5) grade = "5";
+            else if (e.Key == Key.H) grade = "Н"; // H на латинской = Н на русской раскладке
+
+            if (grade == null) return; // нажата другая клавиша — не обрабатываем
+
+            // Применяем оценку к выделенной строке
+            if (JournalGrid.SelectedItem is Dictionary<string, object> row)
+            {
+                await ApplyGradeToRow(row, grade);
+                e.Handled = true; // отмечаем что событие обработано
+            }
         }
 
-        var grade = drv.Row.Table.Columns.Contains(colHeader)
-            ? drv[colHeader]?.ToString() ?? ""
-            : "";
-
-        // Прячем форму добавления, чтобы не путаться.
-        AddPanel.IsVisible = false;
-        EditPanel.IsVisible = true;
-
-        if (string.IsNullOrWhiteSpace(grade))
+        // Применяет оценку к конкретной строке в БД
+        private async System.Threading.Tasks.Task ApplyGradeToRow(Dictionary<string, object> row, string newGrade)
         {
-            // Пустая ячейка — сюда нечего изменять/удалять.
-            _selectedStudent = null;
-            _selectedDate = null;
-            _selectedCurrentGrade = null;
-            EditPanelStatus.Text =
-                $"{student} · {date:dd.MM.yyyy} — оценки нет. Чтобы добавить, нажмите «Добавить оценку».";
+            string studentName = row["ФИО"]?.ToString();
+            string subject = row["Предмет"]?.ToString();
+            DateTime? date = row["Дата"] is DateTime dt ? dt : (DateTime?)null;
+
+            if (string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(subject) || date == null)
+                return;
+
+            string group = GroupCombo.SelectedItem as string;
+            int? studentId = GetStudentId(studentName, group);
+            if (studentId == null) return;
+
+            string sql = @"
+                UPDATE `Аттестация`
+                SET `Оценка` = @grade
+                WHERE `Номер студента` = @studentId
+                  AND `Предмет` = @subject
+                  AND `Дата` = @date";
+
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
+            {
+                { "grade", newGrade },
+                { "studentId", studentId },
+                { "subject", subject },
+                { "date", date }
+            });
+
+            if (result > 0)
+                LoadJournal(); // перезагружаем чтобы показать новое значение
+            else
+                await Dialogs.ErrorAsync("Ошибка", "Не удалось обновить оценку.");
+        }
+
+        // Сохраняет изменённую оценку из панели редактирования
+        private async void SaveEdit()
+        {
+            if (JournalGrid.SelectedItem is not Dictionary<string, object> row)
+                return;
+
+            string newGrade = EditGradeCombo.SelectedItem as string;
+            if (string.IsNullOrEmpty(newGrade))
+            {
+                await Dialogs.WarnAsync("Изменение", "Выберите оценку.");
+                return;
+            }
+
+            await ApplyGradeToRow(row, newGrade);
+            HideEditPanel();
+        }
+
+        // Удаляет выделенную запись об оценке
+        private async void DeleteSelected()
+        {
+            if (JournalGrid.SelectedItem is not Dictionary<string, object> row)
+                return;
+
+            string fio = row["ФИО"]?.ToString();
+            string subject = row["Предмет"]?.ToString();
+            string dateStr = row["Дата"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+
+            bool confirmed = await Dialogs.ConfirmAsync("Удаление",
+                $"Удалить оценку студента «{fio}» по предмету «{subject}» от {dateStr}?");
+            if (!confirmed) return;
+
+            string group = GroupCombo.SelectedItem as string;
+            int? studentId = GetStudentId(fio, group);
+            if (studentId == null)
+            {
+                await Dialogs.ErrorAsync("Удаление", "Студент не найден.");
+                return;
+            }
+
+            DateTime? date = row["Дата"] is DateTime d ? d : (DateTime?)null;
+
+            string sql = @"
+                DELETE FROM `Аттестация`
+                WHERE `Номер студента` = @studentId
+                  AND `Предмет` = @subject
+                  AND `Дата` = @date";
+
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
+            {
+                { "studentId", studentId },
+                { "subject", subject },
+                { "date", date }
+            });
+
+            if (result > 0)
+            {
+                HideEditPanel();
+                LoadJournal();
+            }
+            else
+                await Dialogs.ErrorAsync("Удаление", "Не удалось удалить запись.");
+        }
+
+        // Скрывает панель редактирования и сбрасывает состояние
+        private void HideEditPanel()
+        {
+            EditPanel.IsVisible = false;
             BtnSaveEdit.IsEnabled = false;
-            BtnDeleteSelected.IsEnabled = false;
-            return;
+            BtnDelete.IsEnabled = false;
+            JournalGrid.SelectedItem = null;
         }
 
-        _selectedStudent = student;
-        _selectedDate = date;
-        _selectedCurrentGrade = grade;
-        EditPanelStatus.Text = $"{student} · {date:dd.MM.yyyy} · текущая оценка: {grade}";
-        EditGradeCombo.SelectedItem = grade;
-        BtnSaveEdit.IsEnabled = true;
-        BtnDeleteSelected.IsEnabled = true;
-    }
-
-    private void ClearSelection()
-    {
-        _selectedStudent = null;
-        _selectedDate = null;
-        _selectedCurrentGrade = null;
-        EditPanel.IsVisible = false;
-        BtnSaveEdit.IsEnabled = false;
-        BtnDeleteSelected.IsEnabled = false;
-    }
-
-    private async Task SaveEditAsync()
-    {
-        if (_selectedStudent is null || _selectedDate is null)
-            return;
-
-        var newGrade = EditGradeCombo.SelectedItem as string;
-        if (string.IsNullOrWhiteSpace(newGrade))
+        // Возвращает ID студента по ФИО и группе
+        private int? GetStudentId(string fio, string group)
         {
-            await Dialogs.WarnAsync("Журнал", "Выберите новую оценку.");
-            return;
+            string sql = "SELECT `ID` FROM `Ученики` WHERE `ФИО`=@fio AND `Группа`=@group LIMIT 1";
+            var result = _db.ExecuteScalar(sql, new Dictionary<string, object>
+            {
+                { "fio", fio },
+                { "group", group }
+            });
+            return result != null ? (int?)Convert.ToInt32(result) : null;
         }
 
-        if (newGrade == _selectedCurrentGrade)
+        // Экспортирует текущую таблицу в Excel
+        private async void OnExportClick(object sender, RoutedEventArgs e)
         {
-            await Dialogs.InfoAsync("Журнал", "Оценка не изменилась.");
-            return;
+            if (_currentTable == null || _currentTable.Rows.Count == 0)
+            {
+                await Dialogs.InfoAsync("Экспорт", "Сначала загрузите данные журнала.");
+                return;
+            }
+
+            // Диалог сохранения файла
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Сохранить журнал",
+                DefaultExtension = "xlsx",
+                FileTypeChoices = new[] { new FilePickerFileType("Excel") { Patterns = new[] { "*.xlsx" } } }
+            });
+
+            string path = file?.TryGetLocalPath();
+            if (string.IsNullOrEmpty(path)) return;
+
+            string group = GroupCombo.SelectedItem as string ?? "";
+            string subject = SubjectCombo.SelectedItem as string ?? "";
+
+            ExportService.ExportJournal(_currentTable, path, group, subject);
+            await Dialogs.InfoAsync("Экспорт", "Файл сохранён.");
         }
-
-        var subject = SubjectCombo.SelectedItem as string;
-        if (string.IsNullOrWhiteSpace(subject))
-        {
-            await Dialogs.WarnAsync("Журнал", "Сначала выберите предмет в фильтре.");
-            return;
-        }
-
-        var group = GroupCombo.SelectedItem as string;
-        var sid = await ResolveStudentIdAsync(_selectedStudent, group);
-        if (sid is null)
-        {
-            await Dialogs.ErrorAsync("Журнал", "Не удалось найти студента в БД.");
-            return;
-        }
-
-        const string sql =
-            "UPDATE `Аттестация` SET `Оценка`=@g WHERE `Номер студента`=@s AND `Предмет`=@p AND `Дата`=@d";
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["g"] = newGrade,
-            ["s"] = sid,
-            ["p"] = subject,
-            ["d"] = _selectedDate
-        });
-
-        if (rc < 0)
-        {
-            await Dialogs.ErrorAsync("Журнал",
-                "Не удалось сохранить: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        ClearSelection();
-        await LoadJournalAsync();
-    }
-
-    private async Task DeleteSelectedAsync()
-    {
-        if (_selectedStudent is null || _selectedDate is null || _selectedCurrentGrade is null)
-            return;
-
-        var subject = SubjectCombo.SelectedItem as string;
-        if (string.IsNullOrWhiteSpace(subject))
-        {
-            await Dialogs.WarnAsync("Журнал", "Сначала выберите предмет в фильтре.");
-            return;
-        }
-
-        var confirm = await Dialogs.ConfirmAsync(
-            "Удаление оценки",
-            $"Удалить оценку «{_selectedCurrentGrade}» у студента «{_selectedStudent}» от {_selectedDate:dd.MM.yyyy}?\n\nДействие необратимо.");
-        if (!confirm)
-            return;
-
-        var group = GroupCombo.SelectedItem as string;
-        var sid = await ResolveStudentIdAsync(_selectedStudent, group);
-        if (sid is null)
-        {
-            await Dialogs.ErrorAsync("Журнал", "Не удалось найти студента в БД.");
-            return;
-        }
-
-        const string sql =
-            "DELETE FROM `Аттестация` WHERE `Номер студента`=@s AND `Предмет`=@p AND `Дата`=@d";
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["s"] = sid,
-            ["p"] = subject,
-            ["d"] = _selectedDate
-        });
-
-        if (rc < 0)
-        {
-            await Dialogs.ErrorAsync("Журнал",
-                "Не удалось удалить: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        ClearSelection();
-        await LoadJournalAsync();
-    }
-
-    // ===== Добавление =====
-
-    private async Task AddGradeAsync()
-    {
-        var studentName = AddStudentCombo.SelectedItem as string;
-        var subject = AddSubjectCombo.SelectedItem as string;
-        var grade = AddGradeCombo.SelectedItem as string;
-        var date = AddDatePicker.SelectedDate?.Date;
-        if (string.IsNullOrWhiteSpace(studentName) || string.IsNullOrWhiteSpace(subject) ||
-            string.IsNullOrWhiteSpace(grade) || date is null)
-        {
-            await Dialogs.WarnAsync("Журнал", "Заполните студента, предмет, дату и оценку.");
-            return;
-        }
-
-        var group = GroupCombo.SelectedItem as string;
-        var studentId = await ResolveStudentIdAsync(studentName, group);
-        if (studentId is null)
-        {
-            await Dialogs.ErrorAsync("Журнал", "Не удалось определить студента.");
-            return;
-        }
-
-        const string sql =
-            """
-            INSERT INTO `Аттестация` (`Оценка`, `Предмет`, `Номер студента`, `Дата`)
-            VALUES (@grade, @subject, @sid, @date)
-            """;
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["grade"] = grade,
-            ["subject"] = subject,
-            ["sid"] = studentId,
-            ["date"] = date
-        });
-
-        if (rc == -2)
-            await Dialogs.WarnAsync("Журнал",
-                "Такая оценка уже существует (уникальность предмет+студент+дата).");
-        else if (rc < 0)
-            await Dialogs.ErrorAsync("Журнал",
-                "Ошибка при сохранении: " + (_db.LastError ?? "ошибка БД"));
-        else
-            await LoadJournalAsync();
-    }
-
-    private async Task<int?> ResolveStudentIdAsync(string fio, string? group)
-    {
-        const string sql = "SELECT `ID` FROM `Ученики` WHERE `ФИО`=@f AND `Группа`=@g LIMIT 1";
-        var obj = await _db.ExecuteScalarAsync(sql, new Dictionary<string, object?>
-        {
-            ["f"] = fio,
-            ["g"] = group ?? (object)DBNull.Value
-        });
-        return obj is null or DBNull ? null : Convert.ToInt32(obj);
-    }
-
-    private async Task ExportAsync()
-    {
-        if (_lastPivot == null || _lastPivot.Rows.Count == 0)
-        {
-            await Dialogs.InfoAsync("Экспорт", "Нет данных для экспорта — сначала загрузите журнал.");
-            return;
-        }
-
-        var group = GroupCombo.SelectedItem as string ?? "";
-        var subject = SubjectCombo.SelectedItem as string ?? "";
-        var top = TopLevel.GetTopLevel(this);
-        if (top is null)
-            return;
-
-        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Экспорт журнала",
-            DefaultExtension = "xlsx",
-            FileTypeChoices =
-            [
-                new FilePickerFileType("Excel") { Patterns = ["*.xlsx"] }
-            ]
-        });
-
-        var path = file?.TryGetLocalPath();
-        if (string.IsNullOrWhiteSpace(path))
-            return;
-
-        await Task.Run(() => ExportService.ExportJournal(_lastPivot, path, group, subject));
-        await Dialogs.InfoAsync("Экспорт", "Файл сохранён.");
     }
 }
