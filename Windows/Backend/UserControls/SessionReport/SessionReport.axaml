@@ -1,88 +1,68 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AIT_App.SessionReport">
-    <!-- ДИЗАЙНЕР: два грида + панель правки выделенной оценки;
-         разметка рядом с SessionReport.axaml.cs (Avalonia). -->
+             x:Class="AIT_App.SessionReport"
+             x:CompileBindings="False">
+
     <Grid RowDefinitions="Auto,Auto,*,Auto,*" RowSpacing="10" Margin="0,0,0,8">
-        <!-- Row 0: фильтры -->
-        <Border Grid.Row="0" Padding="12" CornerRadius="8" Background="White">
-            <Grid ColumnDefinitions="*,*,*,*,Auto" ColumnSpacing="8" RowDefinitions="Auto">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Группа" />
-                    <ComboBox x:Name="GroupCombo" PlaceholderText="Группа" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Дата с" />
-                    <CalendarDatePicker x:Name="DateFromPicker" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Дата по" />
-                    <CalendarDatePicker x:Name="DateToPicker" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" VerticalAlignment="Bottom">
-                    <TextBlock Text="" />
-                </StackPanel>
-                <Button x:Name="BtnShow"
-                        Grid.Column="4"
-                        VerticalAlignment="Bottom"
-                        Content="Показать отчёт" />
-            </Grid>
+
+        <!-- Строка 0: фильтры -->
+        <Border Grid.Row="0" Padding="12" CornerRadius="6" Background="White">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Отчёт по сессионной аттестации" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="8">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Группа"/>
+                        <ComboBox x:Name="GroupCombo" PlaceholderText="Выберите группу"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Дата с"/>
+                        <CalendarDatePicker x:Name="DateFromPicker"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Дата по"/>
+                        <CalendarDatePicker x:Name="DateToPicker"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnShow" Grid.Column="3"
+                            Content="Показать" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Button x:Name="BtnExport" Content="Экспорт в Excel" HorizontalAlignment="Left"/>
+            </StackPanel>
         </Border>
 
-        <!-- Row 1: панель редактирования выделенной оценки -->
-        <Border x:Name="EditPanel"
-                Grid.Row="1"
-                Padding="12"
-                CornerRadius="8"
-                Background="#e6f4ff"
-                IsVisible="False">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                <TextBlock x:Name="EditPanelStatus"
-                           VerticalAlignment="Center"
-                           TextWrapping="Wrap"
-                           Text="Кликните по ячейке с оценкой, чтобы изменить или удалить её." />
-                <ComboBox x:Name="EditGradeCombo"
-                          Grid.Column="1"
-                          Width="80"
-                          VerticalAlignment="Center"
-                          PlaceholderText="Оценка" />
-                <Button x:Name="BtnSaveEdit"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Content="Изменить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnDeleteSelected"
-                        Grid.Column="3"
-                        VerticalAlignment="Center"
-                        Content="Удалить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnCancelSelection"
-                        Grid.Column="4"
-                        VerticalAlignment="Center"
-                        Content="Отмена" />
-            </Grid>
-        </Border>
+        <!-- Строка 1: заголовок первой таблицы -->
+        <TextBlock Grid.Row="1" Text="Оценки студентов (pivot: строки = студенты, столбцы = предметы)"
+                   FontWeight="SemiBold" VerticalAlignment="Center"/>
 
-        <!-- Row 2: pivot оценок -->
-        <DataGrid x:Name="GradesGrid"
-                  Grid.Row="2"
+        <!-- Строка 2: pivot-таблица оценок — колонки генерируются в коде -->
+        <DataGrid x:Name="GradesGrid" Grid.Row="2"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   GridLinesVisibility="All"
-                  HeadersVisibility="Column" />
+                  HeadersVisibility="Column"/>
 
-        <!-- Row 3: заголовок + экспорт -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Успеваемость по предметам" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button x:Name="BtnExport" Content="Экспорт в Excel" />
-        </StackPanel>
+        <!-- Строка 3: заголовок второй таблицы -->
+        <TextBlock Grid.Row="3" Text="Успеваемость по предметам"
+                   FontWeight="SemiBold" VerticalAlignment="Center"/>
 
-        <!-- Row 4: грид успеваемости -->
-        <DataGrid x:Name="PerfGrid"
-                  Grid.Row="4"
+        <!-- Строка 4: таблица успеваемости -->
+        <DataGrid x:Name="PerfGrid" Grid.Row="4"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   GridLinesVisibility="All"
-                  HeadersVisibility="Column" />
+                  HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Предмет" Binding="{Binding [Предмет]}" Width="*"/>
+                <DataGridTextColumn Header="Средний балл" Binding="{Binding [СреднийБалл]}" Width="120"/>
+                <DataGridTextColumn Header="Качество % (4 и 5)" Binding="{Binding [КачествоПроц]}" Width="140"/>
+                <DataGridTextColumn Header="Успеваемость % (3,4,5)" Binding="{Binding [УспеваемостьПроц]}" Width="160"/>
+                <DataGridTextColumn Header="Всего оценок" Binding="{Binding [ВсегоОценок]}" Width="110"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
     </Grid>
 </UserControl>

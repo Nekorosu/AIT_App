@@ -1,267 +1,231 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
-using AIT_App.Services;
 using Avalonia.Controls;
-using Avalonia.Data;
+using Avalonia.Interactivity;
+using AIT_App.Services;
 
-namespace AIT_App;
-
-// ТЕСТИРОВЩИК: план сессий — добавление, редактирование (Изменить выбранное),
-// удаление с подтверждением, дубликат, переклассификация типов оценок (sp_UpdateGradeTypes).
-public partial class PlanSession : UserControl
+namespace AIT_App
 {
-    private readonly DataBaseCon _db = new();
-
-    // ID редактируемой записи. null — режим добавления.
-    private int? _editingId;
-
-    public PlanSession()
+    // Раздел "Планирование сессий" (только для администрации).
+    // Позволяет добавлять, редактировать и удалять запланированные экзамены.
+    // После каждого изменения вызывается хранимая процедура sp_UpdateGradeTypes —
+    // она переклассифицирует все оценки (Текущая / Экзаменационная).
+    public partial class PlanSession : UserControl
     {
-        InitializeComponent();
-        BtnAdd.Click += async (_, _) => await AddAsync();
-        BtnEdit.Click += (_, _) => EnterEditMode();
-        BtnDelete.Click += async (_, _) => await DeleteAsync();
-        BtnSaveEdit.Click += async (_, _) => await SaveEditAsync();
-        BtnCancelEdit.Click += (_, _) => ExitEditMode();
-        Loaded += async (_, _) => await InitAsync();
-    }
+        private DataBaseCon _db = new DataBaseCon();
 
-    private async Task InitAsync()
-    {
-        await LoadSubjectsAsync();
-        await ReloadGridAsync();
-    }
+        // ID редактируемой записи. null = режим добавления, не null = режим редактирования
+        private int? _editingId = null;
 
-    private async Task LoadSubjectsAsync()
-    {
-        const string sql = "SELECT `Название` FROM `Дисциплины` ORDER BY `Название`";
-        var table = await _db.ExecuteQueryAsync(sql);
-        var list = new List<string>();
-        if (table != null)
+        public PlanSession()
         {
-            foreach (DataRow row in table.Rows)
+            InitializeComponent();
+
+            BtnAdd.Click += (s, e) => AddSession();
+            BtnEdit.Click += (s, e) => EnterEditMode();
+            BtnDelete.Click += (s, e) => DeleteSession();
+            BtnSaveEdit.Click += (s, e) => SaveEdit();
+            BtnCancelEdit.Click += (s, e) => ExitEditMode();
+
+            // Загружаем начальные данные
+            LoadSubjects();
+            LoadSessions();
+        }
+
+        // Загружает предметы в ComboBox
+        private void LoadSubjects()
+        {
+            string sql = "SELECT `Название` FROM `Дисциплины` ORDER BY `Название`";
+            var table = _db.ExecuteQuery(sql);
+
+            var subjects = new List<string>();
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    subjects.Add(row["Название"].ToString());
+            else
+                _ = Dialogs.ErrorAsync("Ошибка", "Не удалось загрузить предметы.");
+
+            SubjectCombo.ItemsSource = subjects;
+            if (subjects.Count > 0)
+                SubjectCombo.SelectedIndex = 0;
+        }
+
+        // Загружает список сессий в таблицу
+        private void LoadSessions()
+        {
+            string sql = @"
+                SELECT `ID`, `Предмет`, `Дата сессии` AS `ДатаСессии`
+                FROM `Запланированные_сессии`
+                ORDER BY `ДатаСессии`, `Предмет`";
+
+            var table = _db.ExecuteQuery(sql);
+
+            // Если null — показываем пустую таблицу
+            SessionsGrid.ItemsSource = DataBaseCon.ToRowList(table);
+        }
+
+        // Добавляет новую сессию
+        private async void AddSession()
+        {
+            // В режиме редактирования добавление заблокировано
+            if (_editingId != null)
             {
-                var n = row["Название"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(n))
-                    list.Add(n!);
+                await Dialogs.WarnAsync("Добавление", "Сначала завершите редактирование.");
+                return;
+            }
+
+            string subject = SubjectCombo.SelectedItem as string;
+            var date = SessionDatePicker.SelectedDate?.Date;
+
+            if (string.IsNullOrEmpty(subject) || date == null)
+            {
+                await Dialogs.WarnAsync("Добавление", "Выберите предмет и дату.");
+                return;
+            }
+
+            string sql = @"
+                INSERT INTO `Запланированные_сессии` (`Дата сессии`, `Предмет`)
+                VALUES (@date, @subject)";
+
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
+            {
+                { "date", date },
+                { "subject", subject }
+            });
+
+            if (result == -2)
+                await Dialogs.WarnAsync("Добавление", "Такая сессия уже запланирована.");
+            else if (result < 0)
+                await Dialogs.ErrorAsync("Добавление", "Ошибка при добавлении.");
+            else
+            {
+                // Переклассифицируем оценки и обновляем таблицу
+                CallUpdateGradeTypes();
+                LoadSessions();
             }
         }
-        else
+
+        // Удаляет выбранную сессию с подтверждением
+        private async void DeleteSession()
         {
-            await Dialogs.ErrorAsync("План сессий",
-                "Не удалось загрузить предметы: " + (_db.LastError ?? "ошибка БД"));
-        }
-
-        SubjectCombo.ItemsSource = list;
-        if (list.Count > 0)
-            SubjectCombo.SelectedIndex = 0;
-    }
-
-    private async Task ReloadGridAsync()
-    {
-        const string sql =
-            "SELECT `ID`, `Предмет`, `Дата сессии` FROM `Запланированные_сессии` ORDER BY `Дата сессии`, `Предмет`";
-        var table = await _db.ExecuteQueryAsync(sql) ?? new DataTable();
-        ConfigureGridColumns(SessionsGrid);
-        SessionsGrid.ItemsSource = table.DefaultView;
-    }
-
-    private static void ConfigureGridColumns(DataGrid grid)
-    {
-        grid.Columns.Clear();
-        grid.Columns.Add(new DataGridTextColumn
-        {
-            Header = "Предмет",
-            Binding = new Binding
+            if (SessionsGrid.SelectedItem is not Dictionary<string, object> row)
             {
-                Path = ".",
-                Converter = DataRowColumnValueConverter.Instance,
-                ConverterParameter = "Предмет"
+                await Dialogs.WarnAsync("Удаление", "Выберите сессию в таблице.");
+                return;
             }
-        });
-        grid.Columns.Add(new DataGridTextColumn
-        {
-            Header = "Дата сессии",
-            Binding = new Binding
+
+            string subject = row["Предмет"]?.ToString();
+            string dateStr = row["ДатаСессии"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+            int id = Convert.ToInt32(row["ID"]);
+
+            // Предупреждаем что оценки будут переклассифицированы
+            bool confirmed = await Dialogs.ConfirmAsync("Удаление",
+                $"Удалить сессию «{subject}» от {dateStr}?\n\n" +
+                "Оценки за этот день станут «Текущими».");
+            if (!confirmed) return;
+
+            // Исправлен баг оригинала: лишняя ')' в WHERE была удалена
+            string sql = "DELETE FROM `Запланированные_сессии` WHERE `ID` = @id";
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object> { { "id", id } });
+
+            if (result < 0)
             {
-                Path = ".",
-                Converter = DataRowColumnValueConverter.Instance,
-                ConverterParameter = "Дата сессии"
+                await Dialogs.ErrorAsync("Удаление", "Не удалось удалить запись.");
+                return;
             }
-        });
-    }
 
-    // ===== Добавление =====
+            // Если удалили ту запись что редактировали — выходим из режима правки
+            if (_editingId == id)
+                ExitEditMode();
 
-    private async Task AddAsync()
-    {
-        if (_editingId is not null)
-        {
-            // На всякий случай — кнопка «Добавить» в режиме редактирования не должна срабатывать.
-            await Dialogs.WarnAsync("План сессий",
-                "Сейчас идёт редактирование. Сохраните изменения или нажмите «Отмена».");
-            return;
+            CallUpdateGradeTypes();
+            LoadSessions();
         }
 
-        var subject = SubjectCombo.SelectedItem as string;
-        var date = SessionDatePicker.SelectedDate?.Date;
-        if (string.IsNullOrWhiteSpace(subject) || date is null)
+        // Переходит в режим редактирования выбранной строки
+        private async void EnterEditMode()
         {
-            await Dialogs.WarnAsync("План сессий", "Выберите предмет и дату.");
-            return;
+            if (SessionsGrid.SelectedItem is not Dictionary<string, object> row)
+            {
+                await Dialogs.WarnAsync("Редактирование", "Выберите сессию в таблице.");
+                return;
+            }
+
+            _editingId = Convert.ToInt32(row["ID"]);
+            string subject = row["Предмет"]?.ToString();
+
+            // Заполняем форму данными выбранной строки
+            SubjectCombo.SelectedItem = subject;
+            if (row["ДатаСессии"] is DateTime dt)
+                SessionDatePicker.SelectedDate = dt;
+
+            // Показываем панель режима редактирования
+            EditModeLabel.Text = $"Редактируете: «{subject}»";
+            EditModeBar.IsVisible = true;
+
+            // Блокируем другие действия пока идёт редактирование
+            BtnAdd.IsEnabled = false;
+            BtnEdit.IsEnabled = false;
+            BtnDelete.IsEnabled = false;
         }
 
-        const string sql =
-            """
-            INSERT INTO `Запланированные_сессии` (`Дата сессии`, `Предмет`)
-            VALUES (@d, @p)
-            """;
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?>
+        // Сохраняет изменения и выходит из режима редактирования
+        private async void SaveEdit()
         {
-            ["d"] = date,
-            ["p"] = subject
-        });
+            if (_editingId == null) return;
 
-        if (rc == -2)
-            await Dialogs.WarnAsync("План сессий", "Такая запись уже существует.");
-        else if (rc < 0)
-            await Dialogs.ErrorAsync("План сессий",
-                "Ошибка при добавлении: " + (_db.LastError ?? "ошибка БД"));
-        else
-        {
-            await CallUpdateGradeTypesAsync();
-            await ReloadGridAsync();
-        }
-    }
+            string subject = SubjectCombo.SelectedItem as string;
+            var date = SessionDatePicker.SelectedDate?.Date;
 
-    // ===== Удаление =====
+            if (string.IsNullOrEmpty(subject) || date == null)
+            {
+                await Dialogs.WarnAsync("Редактирование", "Выберите предмет и дату.");
+                return;
+            }
 
-    private async Task DeleteAsync()
-    {
-        if (SessionsGrid.SelectedItem is not DataRowView rv)
-        {
-            await Dialogs.WarnAsync("План сессий", "Выберите строку в таблице.");
-            return;
-        }
+            string sql = @"
+                UPDATE `Запланированные_сессии`
+                SET `Предмет` = @subject, `Дата сессии` = @date
+                WHERE `ID` = @id";
 
-        var idObj = rv.Row["ID"];
-        if (idObj is null or DBNull)
-        {
-            await Dialogs.ErrorAsync("План сессий", "Не удалось определить ID записи.");
-            return;
-        }
+            int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
+            {
+                { "subject", subject },
+                { "date", date },
+                { "id", _editingId }
+            });
 
-        var id = Convert.ToInt32(idObj);
-        var subject = rv.Row["Предмет"]?.ToString() ?? "";
-        var dateStr = rv.Row["Дата сессии"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+            if (result == -2)
+            {
+                await Dialogs.WarnAsync("Редактирование", "Такая сессия уже существует.");
+                return;
+            }
+            else if (result < 0)
+            {
+                await Dialogs.ErrorAsync("Редактирование", "Не удалось сохранить изменения.");
+                return;
+            }
 
-        var confirm = await Dialogs.ConfirmAsync(
-            "Удаление сессии",
-            $"Удалить запись «{subject}» от {dateStr}?\n\n" +
-            "Оценки за этот день будут переклассифицированы как «Текущая».");
-        if (!confirm)
-            return;
-
-        // КОДЕР: в оригинале был лишний ')' в DELETE — здесь только корректный SQL.
-        const string sql = "DELETE FROM `Запланированные_сессии` WHERE `ID` = @id";
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?> { ["id"] = id });
-        if (rc < 0)
-        {
-            await Dialogs.ErrorAsync("План сессий",
-                "Ошибка при удалении: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        // Если удаляли запись, которую сейчас редактировали — выходим из режима правки.
-        if (_editingId == id)
+            CallUpdateGradeTypes();
             ExitEditMode();
-
-        await CallUpdateGradeTypesAsync();
-        await ReloadGridAsync();
-    }
-
-    // ===== Режим редактирования =====
-
-    private void EnterEditMode()
-    {
-        if (SessionsGrid.SelectedItem is not DataRowView rv)
-        {
-            _ = Dialogs.WarnAsync("План сессий", "Выберите строку в таблице.");
-            return;
+            LoadSessions();
         }
 
-        var idObj = rv.Row["ID"];
-        if (idObj is null or DBNull)
+        // Выходит из режима редактирования без сохранения
+        private void ExitEditMode()
         {
-            _ = Dialogs.ErrorAsync("План сессий", "Не удалось определить ID записи.");
-            return;
+            _editingId = null;
+            EditModeBar.IsVisible = false;
+            BtnAdd.IsEnabled = true;
+            BtnEdit.IsEnabled = true;
+            BtnDelete.IsEnabled = true;
         }
 
-        _editingId = Convert.ToInt32(idObj);
-        var subject = rv.Row["Предмет"]?.ToString();
-        SubjectCombo.SelectedItem = subject;
-        if (rv.Row["Дата сессии"] is DateTime dt)
-            SessionDatePicker.SelectedDate = dt;
-
-        EditModeStatus.Text =
-            $"Редактируете запись #{_editingId}: «{subject}» от " +
-            (rv.Row["Дата сессии"] is DateTime d ? d.ToString("dd.MM.yyyy") : "?");
-        EditModeBar.IsVisible = true;
-        BtnAdd.IsEnabled = false;
-        BtnEdit.IsEnabled = false;
-        BtnDelete.IsEnabled = false;
-    }
-
-    private void ExitEditMode()
-    {
-        _editingId = null;
-        EditModeBar.IsVisible = false;
-        BtnAdd.IsEnabled = true;
-        BtnEdit.IsEnabled = true;
-        BtnDelete.IsEnabled = true;
-    }
-
-    private async Task SaveEditAsync()
-    {
-        if (_editingId is null)
-            return;
-
-        var subject = SubjectCombo.SelectedItem as string;
-        var date = SessionDatePicker.SelectedDate?.Date;
-        if (string.IsNullOrWhiteSpace(subject) || date is null)
+        // Вызывает хранимую процедуру пересчёта типов оценок
+        private void CallUpdateGradeTypes()
         {
-            await Dialogs.WarnAsync("План сессий", "Заполните предмет и дату.");
-            return;
+            _db.ExecuteNonQuery("CALL `sp_UpdateGradeTypes`()");
         }
-
-        const string sql =
-            "UPDATE `Запланированные_сессии` SET `Предмет`=@p, `Дата сессии`=@d WHERE `ID`=@id";
-        var rc = await _db.ExecuteNonQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["p"] = subject,
-            ["d"] = date,
-            ["id"] = _editingId
-        });
-
-        if (rc == -2)
-        {
-            await Dialogs.WarnAsync("План сессий", "Такая запись уже существует.");
-            return;
-        }
-
-        if (rc < 0)
-        {
-            await Dialogs.ErrorAsync("План сессий",
-                "Ошибка при сохранении: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        await CallUpdateGradeTypesAsync();
-        ExitEditMode();
-        await ReloadGridAsync();
-    }
-
-    private async Task CallUpdateGradeTypesAsync()
-    {
-        await _db.ExecuteNonQueryAsync("CALL `sp_UpdateGradeTypes`()");
     }
 }

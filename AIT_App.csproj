@@ -19,7 +19,6 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="MySqlConnector" Version="2.*" />
-        <PackageReference Include="MessageBox.Avalonia" Version="3.*" />
         <PackageReference Include="ClosedXML" Version="0.102.*" />
     </ItemGroup>
     <ItemGroup>

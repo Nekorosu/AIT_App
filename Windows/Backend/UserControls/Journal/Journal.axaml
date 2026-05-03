@@ -1,116 +1,118 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AIT_App.Journal">
-    <!-- ДИЗАЙНЕР: разметка рядом с Journal.axaml.cs (Avalonia); не ломайте x:Name без согласования с кодом.
-         Добавлено: EditPanel — появляется при клике на ячейку с оценкой. -->
+             x:Class="AIT_App.Journal"
+             x:CompileBindings="False">
+
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="0,0,0,8" RowSpacing="10">
-        <!-- Row 0: фильтры -->
-        <Border Padding="12" CornerRadius="8" Background="White">
-            <Grid ColumnDefinitions="*,*,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="8">
-                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
-                    <TextBlock Text="Группа" />
-                    <ComboBox x:Name="GroupCombo" PlaceholderText="Выберите группу" />
-                </StackPanel>
-                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Предмет" />
-                    <ComboBox x:Name="SubjectCombo" PlaceholderText="Сначала группа" IsEnabled="False" />
-                </StackPanel>
-                <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Тип оценки" />
-                    <ComboBox x:Name="TypeFilterCombo" />
-                </StackPanel>
-                <Button x:Name="BtnLoad"
-                        Grid.Row="0"
-                        Grid.Column="3"
-                        VerticalAlignment="Bottom"
-                        Content="Загрузить" />
 
-                <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Orientation="Horizontal" Spacing="8">
-                    <Button x:Name="BtnToggleAdd" Content="Добавить оценку" />
-                    <Button x:Name="BtnExport" Content="Экспорт в Excel" />
+        <!-- Строка 0: фильтры выборки -->
+        <Border Grid.Row="0" Padding="12" CornerRadius="6" Background="White">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Фильтры" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="8">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Группа"/>
+                        <ComboBox x:Name="GroupCombo" PlaceholderText="Выберите группу"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Предмет"/>
+                        <ComboBox x:Name="SubjectCombo" PlaceholderText="Сначала группу"
+                                  HorizontalAlignment="Stretch" IsEnabled="False"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Тип оценки"/>
+                        <ComboBox x:Name="TypeCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnLoad" Grid.Column="3"
+                            Content="Загрузить" VerticalAlignment="Bottom"/>
+                </Grid>
+
+                <!-- Кнопки действий -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="BtnToggleAdd" Content="Добавить оценку"/>
+                    <Button x:Name="BtnExport" Content="Экспорт в Excel"/>
+                    <TextBlock x:Name="HintLabel" VerticalAlignment="Center"
+                               Foreground="#888" FontSize="12"
+                               Text="Стрелки ↑↓ — перемещение. Клавиши 2 3 4 5 Н — выставить оценку выделенной строке."/>
                 </StackPanel>
-            </Grid>
+            </StackPanel>
         </Border>
 
-        <!-- Row 1: панель добавления (как раньше, без устаревшей кнопки «Удалить по полям») -->
-        <Border x:Name="AddPanel"
-                Grid.Row="1"
-                Padding="12"
-                CornerRadius="8"
-                Background="#fff7e6"
+        <!-- Строка 1: панель добавления оценки (скрыта по умолчанию) -->
+        <Border x:Name="AddPanel" Grid.Row="1"
+                Padding="12" CornerRadius="6" Background="#fff7e6"
                 IsVisible="False">
-            <Grid ColumnDefinitions="*,*,*,*,Auto" ColumnSpacing="8" RowDefinitions="Auto">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Студент" />
-                    <ComboBox x:Name="AddStudentCombo" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Предмет" />
-                    <ComboBox x:Name="AddSubjectCombo" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Дата" />
-                    <DatePicker x:Name="AddDatePicker" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" Spacing="4">
-                    <TextBlock Text="Оценка" />
-                    <ComboBox x:Name="AddGradeCombo" />
-                </StackPanel>
-                <Button x:Name="BtnAddGrade"
-                        Grid.Column="4"
-                        VerticalAlignment="Bottom"
-                        Content="Сохранить" />
-            </Grid>
+            <StackPanel Spacing="8">
+                <TextBlock Text="Добавить оценку" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,*,*,*,Auto" ColumnSpacing="8">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Студент"/>
+                        <ComboBox x:Name="AddStudentCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Предмет"/>
+                        <ComboBox x:Name="AddSubjectCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Дата"/>
+                        <CalendarDatePicker x:Name="AddDatePicker"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Spacing="4">
+                        <TextBlock Text="Оценка"/>
+                        <ComboBox x:Name="AddGradeCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnAdd" Grid.Column="4"
+                            Content="Сохранить" VerticalAlignment="Bottom"/>
+                </Grid>
+            </StackPanel>
         </Border>
 
-        <!-- Row 2: панель редактирования выделенной оценки.
-             Появляется при клике на ячейку грида. -->
-        <Border x:Name="EditPanel"
-                Grid.Row="2"
-                Padding="12"
-                CornerRadius="8"
-                Background="#e6f4ff"
+        <!-- Строка 2: панель редактирования выделенной строки (скрыта по умолчанию) -->
+        <Border x:Name="EditPanel" Grid.Row="2"
+                Padding="12" CornerRadius="6" Background="#e6f4ff"
                 IsVisible="False">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                <TextBlock x:Name="EditPanelStatus"
-                           VerticalAlignment="Center"
-                           TextWrapping="Wrap"
-                           Text="Кликните по ячейке с оценкой, чтобы изменить или удалить её." />
-                <ComboBox x:Name="EditGradeCombo"
-                          Grid.Column="1"
-                          Width="80"
-                          VerticalAlignment="Center"
-                          PlaceholderText="Оценка" />
-                <Button x:Name="BtnSaveEdit"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Content="Изменить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnDeleteSelected"
-                        Grid.Column="3"
-                        VerticalAlignment="Center"
-                        Content="Удалить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnCancelSelection"
-                        Grid.Column="4"
-                        VerticalAlignment="Center"
-                        Content="Отмена" />
+                <TextBlock x:Name="EditStatusLabel" VerticalAlignment="Center"
+                           TextWrapping="Wrap"/>
+                <ComboBox x:Name="EditGradeCombo" Grid.Column="1"
+                          Width="80" VerticalAlignment="Center"/>
+                <Button x:Name="BtnSaveEdit" Grid.Column="2"
+                        Content="Изменить" VerticalAlignment="Center" IsEnabled="False"/>
+                <Button x:Name="BtnDelete" Grid.Column="3"
+                        Content="Удалить" VerticalAlignment="Center" IsEnabled="False"/>
+                <Button x:Name="BtnCancelEdit" Grid.Column="4"
+                        Content="Отмена" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <!-- Row 3: грид -->
-        <DataGrid x:Name="JournalGrid"
-                  Grid.Row="3"
+        <!-- Строка 3: таблица оценок -->
+        <DataGrid x:Name="JournalGrid" Grid.Row="3"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   GridLinesVisibility="All"
-                  HeadersVisibility="Column" />
+                  HeadersVisibility="Column"
+                  CanUserReorderColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                <DataGridTextColumn Header="Предмет" Binding="{Binding [Предмет]}" Width="160"/>
+                <DataGridTextColumn Header="Дата" Binding="{Binding [Дата], StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+                <DataGridTextColumn Header="Оценка" Binding="{Binding [Оценка]}" Width="80"/>
+                <DataGridTextColumn Header="Тип" Binding="{Binding [Тип]}" Width="130"/>
+            </DataGrid.Columns>
+        </DataGrid>
 
-        <!-- Row 4: подсказка -->
-        <TextBlock x:Name="JournalHint"
-                   Grid.Row="4"
-                   Foreground="#666"
-                   TextWrapping="Wrap"
-                   Text="Выберите группу и предмет, затем нажмите «Загрузить». Клик по ячейке — изменить или удалить оценку." />
+        <!-- Строка 4: статусная строка -->
+        <TextBlock x:Name="StatusLabel" Grid.Row="4"
+                   Foreground="#666" FontSize="12"/>
     </Grid>
 </UserControl>

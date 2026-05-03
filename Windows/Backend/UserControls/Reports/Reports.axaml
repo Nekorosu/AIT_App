@@ -1,84 +1,131 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AIT_App.Reports">
-    <!-- ДИЗАЙНЕР: вкладки и счётчики; разметка рядом с Reports.axaml.cs (Avalonia). -->
-    <Grid RowDefinitions="Auto,*" RowSpacing="10" Margin="0,0,0,8">
-        <Border Padding="12" CornerRadius="8" Background="White">
-            <Grid ColumnDefinitions="*,*,*,Auto,Auto" ColumnSpacing="8">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Специальность" />
-                    <ComboBox x:Name="SpecialityCombo" PlaceholderText="Все" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Группа" />
-                    <ComboBox x:Name="GroupCombo" PlaceholderText="Все" IsEnabled="False" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Тип оценки" />
-                    <ComboBox x:Name="TypeCombo" />
-                </StackPanel>
-                <Button x:Name="BtnBuild"
-                        Grid.Column="3"
-                        VerticalAlignment="Bottom"
-                        Content="Построить" />
-                <Button x:Name="BtnExport"
-                        Grid.Column="4"
-                        VerticalAlignment="Bottom"
-                        Content="Экспорт (5 листов)" />
-            </Grid>
+             x:Class="AIT_App.Reports"
+             x:CompileBindings="False">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+
+        <!-- Строка 0: фильтры -->
+        <Border Grid.Row="0" Padding="12" CornerRadius="6" Background="White">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Дополнительные отчёты" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="8">
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Специальность"/>
+                        <ComboBox x:Name="SpecialityCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Группа"/>
+                        <ComboBox x:Name="GroupCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Тип оценок"/>
+                        <ComboBox x:Name="TypeCombo" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Spacing="4">
+                        <Button x:Name="BtnBuild" Content="Построить" VerticalAlignment="Bottom"/>
+                        <Button x:Name="BtnExport" Content="Экспорт xlsx"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
         </Border>
 
-        <TabControl x:Name="Tabs" Grid.Row="1">
+        <!-- Строка 1: вкладки с результатами -->
+        <TabControl Grid.Row="1">
+
+            <!-- Отличники: все оценки 5 -->
             <TabItem Header="Отличники">
-                <Grid RowDefinitions="Auto,*" Margin="8">
-                    <TextBlock x:Name="CntExcellent" Margin="0,0,0,6" />
-                    <DataGrid x:Name="GridExcellent"
-                              Grid.Row="1"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              GridLinesVisibility="All" />
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock x:Name="CntExcellent" Grid.Row="0" Margin="0,4,0,4"
+                               FontSize="12" Foreground="#555"/>
+                    <DataGrid x:Name="GridExcellent" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="All" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- Хорошисты: только 4 и 5, есть хотя бы одна 4 -->
             <TabItem Header="Хорошисты">
-                <Grid RowDefinitions="Auto,*" Margin="8">
-                    <TextBlock x:Name="CntGood" Margin="0,0,0,6" />
-                    <DataGrid x:Name="GridGood"
-                              Grid.Row="1"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              GridLinesVisibility="All" />
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock x:Name="CntGood" Grid.Row="0" Margin="0,4,0,4"
+                               FontSize="12" Foreground="#555"/>
+                    <DataGrid x:Name="GridGood" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="All" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- Троечники: есть 3, нет 2 и Н -->
             <TabItem Header="Троечники">
-                <Grid RowDefinitions="Auto,*" Margin="8">
-                    <TextBlock x:Name="CntThree" Margin="0,0,0,6" />
-                    <DataGrid x:Name="GridThree"
-                              Grid.Row="1"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              GridLinesVisibility="All" />
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock x:Name="CntThree" Grid.Row="0" Margin="0,4,0,4"
+                               FontSize="12" Foreground="#555"/>
+                    <DataGrid x:Name="GridThree" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="All" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- Должники: есть 2 или Н -->
             <TabItem Header="Должники">
-                <Grid RowDefinitions="Auto,*" Margin="8">
-                    <TextBlock x:Name="CntDebt" Margin="0,0,0,6" />
-                    <DataGrid x:Name="GridDebt"
-                              Grid.Row="1"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              GridLinesVisibility="All" />
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock x:Name="CntDebt" Grid.Row="0" Margin="0,4,0,4"
+                               FontSize="12" Foreground="#555"/>
+                    <DataGrid x:Name="GridDebt" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="All" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                            <DataGridTextColumn Header="Кол-во «2»" Binding="{Binding [КоличествоДвоек]}" Width="90"/>
+                            <DataGridTextColumn Header="Кол-во «Н»" Binding="{Binding [КоличествоН]}" Width="90"/>
+                            <DataGridTextColumn Header="Предметы" Binding="{Binding [Предметы]}" Width="200"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
+            <!-- Красный диплом: средний балл ≥ 4.5, нет 3, 2, Н -->
             <TabItem Header="Красный диплом">
-                <Grid RowDefinitions="Auto,*" Margin="8">
-                    <TextBlock x:Name="CntRed" Margin="0,0,0,6" />
-                    <DataGrid x:Name="GridRed"
-                              Grid.Row="1"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              GridLinesVisibility="All" />
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock x:Name="CntRed" Grid.Row="0" Margin="0,4,0,4"
+                               FontSize="12" Foreground="#555"/>
+                    <DataGrid x:Name="GridRed" Grid.Row="1"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="All" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                            <DataGridTextColumn Header="Средний балл" Binding="{Binding [СреднийБалл]}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
             </TabItem>
+
         </TabControl>
     </Grid>
 </UserControl>
