@@ -256,7 +256,7 @@ namespace AIT_App
                 string fio = row["ФИО"]?.ToString();
                 string subject = row["Предмет"]?.ToString();
                 string grade = row["Оценка"]?.ToString();
-                string dateStr = row["Дата"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+                string dateStr = ParseRowDate(row["Дата"])?.ToString("dd.MM.yyyy") ?? "";
 
                 EditStatusLabel.Text = $"{fio} · {subject} · {dateStr} · оценка: {grade}";
                 EditGradeCombo.SelectedItem = grade;
@@ -293,7 +293,7 @@ namespace AIT_App
         {
             string studentName = row["ФИО"]?.ToString();
             string subject = row["Предмет"]?.ToString();
-            DateTime? date = row["Дата"] is DateTime dt ? dt : (DateTime?)null;
+            DateTime? date = ParseRowDate(row["Дата"]);
 
             if (string.IsNullOrEmpty(studentName) || string.IsNullOrEmpty(subject) || date == null)
                 return;
@@ -348,7 +348,7 @@ namespace AIT_App
 
             string fio = row["ФИО"]?.ToString();
             string subject = row["Предмет"]?.ToString();
-            string dateStr = row["Дата"] is DateTime dt ? dt.ToString("dd.MM.yyyy") : "";
+            string dateStr = ParseRowDate(row["Дата"])?.ToString("dd.MM.yyyy") ?? "";
 
             bool confirmed = await Dialogs.ConfirmAsync("Удаление",
                 $"Удалить оценку студента «{fio}» по предмету «{subject}» от {dateStr}?");
@@ -362,7 +362,7 @@ namespace AIT_App
                 return;
             }
 
-            DateTime? date = row["Дата"] is DateTime d ? d : (DateTime?)null;
+            DateTime? date = ParseRowDate(row["Дата"]);
 
             string sql = @"
                 DELETE FROM `Аттестация`
@@ -393,6 +393,18 @@ namespace AIT_App
             BtnSaveEdit.IsEnabled = false;
             BtnDelete.IsEnabled = false;
             JournalGrid.SelectedItem = null;
+        }
+
+        // Вспомогательный метод: парсит дату из ячейки таблицы.
+        // MySqlConnector иногда возвращает дату как DateTime, иногда как string —
+        // этот метод обрабатывает оба случая.
+        private DateTime? ParseRowDate(object value)
+        {
+            if (value is DateTime dt)
+                return dt;
+            if (DateTime.TryParse(value?.ToString(), out DateTime parsed))
+                return parsed;
+            return null;
         }
 
         // Возвращает ID студента по ФИО и группе

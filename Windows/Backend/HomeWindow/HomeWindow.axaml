@@ -9,6 +9,13 @@
 
         <!-- Боковая панель навигации -->
         <Border Grid.Column="0" Background="#1a1a2e">
+         <Border.Styles>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1e1e48"/>  <!-- Цвет кнопки при наведении курсора -->
+            <Setter Property="Foreground" Value="White"/>  <!-- Цвет текста кнопки при наведении курсора -->
+        </Style>
+    </Border.Styles>
+           
             <DockPanel>
 
                 <!-- Верхняя часть: название и кнопки разделов -->
@@ -19,54 +26,56 @@
                                FontSize="18" FontWeight="Bold"
                                HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
+               
                     <!-- Кнопки доступны всем ролям -->
                     <Button x:Name="BtnJournal" Content="Журнал"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"/>
+                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
 
                     <Button x:Name="BtnSessionReport" Content="Отчёт по сессии"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"/>
+                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
 
                     <Button x:Name="BtnReports" Content="Доп. отчёты"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"/>
-
+                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
+                
+                
                     <!-- Разделитель — ниже только для администрации (роль 1) -->
                     <Border x:Name="AdminSeparator"
                             Height="1" Background="#333355"
-                            Margin="16,8" IsVisible="False"/>
+                            Margin="16,8" IsVisible="False" />
 
                     <!-- Кнопки только для администрации -->
                     <Button x:Name="BtnPlanSession" Content="План сессий"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                             Padding="16,10" Margin="8,2"
-                            IsVisible="False"/>
+                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
 
                     <Button x:Name="BtnStudents" Content="Студенты"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                             Padding="16,10" Margin="8,2"
-                            IsVisible="False"/>
+                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
 
                     <Button x:Name="BtnTeachers" Content="Преподаватели"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                             Padding="16,10" Margin="8,2"
-                            IsVisible="False"/>
+                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
                 </StackPanel>
 
                 <!-- Нижняя часть: информация о пользователе, настройки, выход -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,12" Spacing="4">
                     <TextBlock x:Name="UserLabel" Foreground="#aaaaaa"
                                FontSize="12" HorizontalAlignment="Center"
-                               Margin="8,4"/>
+                               Margin="8,4" />
 
                     <Button x:Name="BtnSettings" Content="Настройки"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"/>
+                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
 
                     <Button x:Name="BtnLogout" Content="Выход"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"/>
+                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
                 </StackPanel>
 
             </DockPanel>
