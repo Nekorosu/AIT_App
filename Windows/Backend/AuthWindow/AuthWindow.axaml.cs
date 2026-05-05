@@ -135,6 +135,7 @@ namespace AIT_App
             {
                 // Пользователь с таким логином/паролем не найден
                 await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
+                PasswordInput.Text = "";
                 return;
             }
 

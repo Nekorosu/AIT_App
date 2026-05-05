@@ -276,7 +276,7 @@ namespace AIT_App
             else if (e.Key == Key.D3 || e.Key == Key.NumPad3) grade = "3";
             else if (e.Key == Key.D4 || e.Key == Key.NumPad4) grade = "4";
             else if (e.Key == Key.D5 || e.Key == Key.NumPad5) grade = "5";
-            else if (e.Key == Key.H) grade = "Н"; // H на латинской = Н на русской раскладке
+            else if (e.Key == Key.Y) grade = "Н"; // H на латинской = Н на русской раскладке
 
             if (grade == null) return; // нажата другая клавиша — не обрабатываем
 
@@ -372,9 +372,9 @@ namespace AIT_App
 
             int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
             {
-                { "studentId", studentId },
-                { "subject", subject },
-                { "date", date }
+                { "@studentId", studentId },
+                { "@subject", subject },
+                { "@date", date }
             });
 
             if (result > 0)
