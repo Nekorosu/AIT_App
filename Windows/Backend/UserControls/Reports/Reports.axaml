@@ -3,129 +3,140 @@
              x:Class="AIT_App.Reports"
              x:CompileBindings="False">
 
-    <Grid RowDefinitions="Auto,*" RowSpacing="10">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
 
-        <!-- Строка 0: фильтры -->
-        <Border Grid.Row="0" Padding="12" CornerRadius="6" Background="White">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Дополнительные отчёты" FontWeight="SemiBold"/>
-                <Grid ColumnDefinitions="*,*,*,Auto" ColumnSpacing="8">
-
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="Специальность"/>
-                        <ComboBox x:Name="SpecialityCombo" HorizontalAlignment="Stretch"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock Text="Группа"/>
-                        <ComboBox x:Name="GroupCombo" HorizontalAlignment="Stretch"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2" Spacing="4">
-                        <TextBlock Text="Тип оценок"/>
-                        <ComboBox x:Name="TypeCombo" HorizontalAlignment="Stretch"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="3" Spacing="4">
-                        <Button x:Name="BtnBuild" Content="Построить" VerticalAlignment="Bottom"/>
-                        <Button x:Name="BtnExport" Content="Экспорт xlsx"/>
-                    </StackPanel>
-                </Grid>
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="Дополнительные отчёты" Classes="h1"/>
+                <TextBlock Text="Категории студентов по успеваемости" Classes="muted"/>
             </StackPanel>
+            <Button Grid.Column="1" x:Name="BtnExport" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Stretch="Uniform" Width="14" Height="14"
+                          Stroke="{Binding $parent[Button].Foreground}"
+                          StrokeThickness="2" Fill="Transparent"
+                          StrokeJoin="Round" StrokeLineCap="Round"
+                          Data="M12 3v12 M7 10l5 5 5-5 M5 21h14"
+                          VerticalAlignment="Center"/>
+                    <TextBlock Text="Экспорт xlsx" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Border Grid.Row="1" Classes="card" Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,*,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Text="Специальность"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="0,0,10,0"/>
+                <ComboBox Grid.Column="1" x:Name="SpecialityCombo"
+                          HorizontalAlignment="Stretch" MaxWidth="220"/>
+
+                <TextBlock Grid.Column="2" Text="Группа"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="20,0,10,0"/>
+                <ComboBox Grid.Column="3" x:Name="GroupCombo"
+                          HorizontalAlignment="Stretch" MaxWidth="160"/>
+
+                <TextBlock Grid.Column="4" Text="Тип оценок"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="20,0,10,0"/>
+                <ComboBox Grid.Column="5" x:Name="TypeCombo"
+                          HorizontalAlignment="Stretch" MaxWidth="180"/>
+
+                <Button Grid.Column="6" x:Name="BtnBuild"
+                        Classes="primary"
+                        Content="Построить"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Center"/>
+            </Grid>
         </Border>
 
-        <!-- Строка 1: вкладки с результатами -->
-        <TabControl Grid.Row="1">
+        <Border Grid.Row="2" Classes="card" Padding="0">
+            <TabControl Padding="8,4,8,8">
 
-            <!-- Отличники: все оценки 5 -->
-            <TabItem Header="Отличники">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock x:Name="CntExcellent" Grid.Row="0" Margin="0,4,0,4"
-                               FontSize="12" Foreground="#555"/>
-                    <DataGrid x:Name="GridExcellent" Grid.Row="1"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              GridLinesVisibility="All" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
-                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+                <TabItem Header="Отличники">
+                    <Grid RowDefinitions="Auto,*" Margin="8">
+                        <TextBlock x:Name="CntExcellent" Grid.Row="0" Margin="0,4,0,8"
+                                   FontSize="12" Foreground="{StaticResource FgSecondaryBrush}"/>
+                        <DataGrid x:Name="GridExcellent" Grid.Row="1"
+                                  AutoGenerateColumns="False" IsReadOnly="True"  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                                <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="200"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
 
-            <!-- Хорошисты: только 4 и 5, есть хотя бы одна 4 -->
-            <TabItem Header="Хорошисты">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock x:Name="CntGood" Grid.Row="0" Margin="0,4,0,4"
-                               FontSize="12" Foreground="#555"/>
-                    <DataGrid x:Name="GridGood" Grid.Row="1"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              GridLinesVisibility="All" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
-                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+                <TabItem Header="Хорошисты">
+                    <Grid RowDefinitions="Auto,*" Margin="8">
+                        <TextBlock x:Name="CntGood" Grid.Row="0" Margin="0,4,0,8"
+                                   FontSize="12" Foreground="{StaticResource FgSecondaryBrush}"/>
+                        <DataGrid x:Name="GridGood" Grid.Row="1"
+                                  AutoGenerateColumns="False" IsReadOnly="True"  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                                <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="200"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
 
-            <!-- Троечники: есть 3, нет 2 и Н -->
-            <TabItem Header="Троечники">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock x:Name="CntThree" Grid.Row="0" Margin="0,4,0,4"
-                               FontSize="12" Foreground="#555"/>
-                    <DataGrid x:Name="GridThree" Grid.Row="1"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              GridLinesVisibility="All" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
-                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+                <TabItem Header="Троечники">
+                    <Grid RowDefinitions="Auto,*" Margin="8">
+                        <TextBlock x:Name="CntThree" Grid.Row="0" Margin="0,4,0,8"
+                                   FontSize="12" Foreground="{StaticResource FgSecondaryBrush}"/>
+                        <DataGrid x:Name="GridThree" Grid.Row="1"
+                                  AutoGenerateColumns="False" IsReadOnly="True"  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                                <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="200"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
 
-            <!-- Должники: есть 2 или Н -->
-            <TabItem Header="Должники">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock x:Name="CntDebt" Grid.Row="0" Margin="0,4,0,4"
-                               FontSize="12" Foreground="#555"/>
-                    <DataGrid x:Name="GridDebt" Grid.Row="1"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              GridLinesVisibility="All" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
-                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                            <DataGridTextColumn Header="Кол-во «2»" Binding="{Binding [КоличествоДвоек]}" Width="90"/>
-                            <DataGridTextColumn Header="Кол-во «Н»" Binding="{Binding [КоличествоН]}" Width="90"/>
-                            <DataGridTextColumn Header="Предметы" Binding="{Binding [Предметы]}" Width="200"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+                <TabItem Header="Должники">
+                    <Grid RowDefinitions="Auto,*" Margin="8">
+                        <TextBlock x:Name="CntDebt" Grid.Row="0" Margin="0,4,0,8"
+                                   FontSize="12" Foreground="{StaticResource FgSecondaryBrush}"/>
+                        <DataGrid x:Name="GridDebt" Grid.Row="1"
+                                  AutoGenerateColumns="False" IsReadOnly="True"  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="110"/>
+                                <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
+                                <DataGridTextColumn Header="Кол-во «2»" Binding="{Binding [КоличествоДвоек]}" Width="100"/>
+                                <DataGridTextColumn Header="Кол-во «Н»" Binding="{Binding [КоличествоН]}" Width="100"/>
+                                <DataGridTextColumn Header="Предметы" Binding="{Binding [Предметы]}" Width="220"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
 
-            <!-- Красный диплом: средний балл ≥ 4.5, нет 3, 2, Н -->
-            <TabItem Header="Красный диплом">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock x:Name="CntRed" Grid.Row="0" Margin="0,4,0,4"
-                               FontSize="12" Foreground="#555"/>
-                    <DataGrid x:Name="GridRed" Grid.Row="1"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              GridLinesVisibility="All" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
-                            <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
-                            <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                            <DataGridTextColumn Header="Средний балл" Binding="{Binding [СреднийБалл]}" Width="120"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+                <TabItem Header="Красный диплом">
+                    <Grid RowDefinitions="Auto,*" Margin="8">
+                        <TextBlock x:Name="CntRed" Grid.Row="0" Margin="0,4,0,8"
+                                   FontSize="12" Foreground="{StaticResource FgSecondaryBrush}"/>
+                        <DataGrid x:Name="GridRed" Grid.Row="1"
+                                  AutoGenerateColumns="False" IsReadOnly="True"  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="120"/>
+                                <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="200"/>
+                                <DataGridTextColumn Header="Средний балл" Binding="{Binding [СреднийБалл]}" Width="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
 
-        </TabControl>
+            </TabControl>
+        </Border>
     </Grid>
 </UserControl>

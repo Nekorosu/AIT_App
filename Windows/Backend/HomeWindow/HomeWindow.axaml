@@ -2,89 +2,224 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AIT_App.HomeWindow"
         Title="Электронный журнал"
-        Width="1100" Height="680"
-        MinWidth="900" MinHeight="500">
+        Width="1400" Height="800"
+        Background="{StaticResource BgAppBrush}">
 
-    <Grid ColumnDefinitions="200,*">
+    <Grid ColumnDefinitions="60,240,Auto,*">
 
-        <!-- Боковая панель навигации -->
-        <Border Grid.Column="0" Background="#1a1a2e">
-         <Border.Styles>
-        <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1e1e48"/>  <!-- Цвет кнопки при наведении курсора -->
-            <Setter Property="Foreground" Value="White"/>  <!-- Цвет текста кнопки при наведении курсора -->
-        </Style>
-    </Border.Styles>
-           
+        <!-- ===== Колонка 0: узкий иконочный сайдбар (декоративный задел на суперапп) ===== -->
+        <Border Grid.Column="0" Background="{StaticResource BgSidebarNarrowBrush}">
             <DockPanel>
+                <!-- Верхние иконки: переключатели «приложений» -->
+                <StackPanel DockPanel.Dock="Top" Margin="0,12,0,0" Spacing="6"
+                            HorizontalAlignment="Center">
 
-                <!-- Верхняя часть: название и кнопки разделов -->
-                <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,16,0,0">
+                    <!-- Иконка приложения 1: сетка (декоративная) -->
+                    <Button Classes="iconNav" ToolTip.Tip="Главный экран">
+                        <Path Stretch="Uniform" Width="18" Height="18"
+                              Fill="{Binding $parent[Button].Foreground}"
+                              Data="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z"/>
+                    </Button>
 
-                    <!-- Заголовок приложения -->
-                    <TextBlock Text="Журнал" Foreground="White"
-                               FontSize="18" FontWeight="Bold"
-                               HorizontalAlignment="Center" Margin="0,0,0,16"/>
-
-               
-                    <!-- Кнопки доступны всем ролям -->
-                    <Button x:Name="BtnJournal" Content="Журнал"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
-
-                    <Button x:Name="BtnSessionReport" Content="Отчёт по сессии"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
-
-                    <Button x:Name="BtnReports" Content="Доп. отчёты"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
-                
-                
-                    <!-- Разделитель — ниже только для администрации (роль 1) -->
-                    <Border x:Name="AdminSeparator"
-                            Height="1" Background="#333355"
-                            Margin="16,8" IsVisible="False" />
-
-                    <!-- Кнопки только для администрации -->
-                    <Button x:Name="BtnPlanSession" Content="План сессий"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"
-                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
-
-                    <Button x:Name="BtnStudents" Content="Студенты"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"
-                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
-
-                    <Button x:Name="BtnTeachers" Content="Преподаватели"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2"
-                            IsVisible="False" Foreground="White" Background="#0E0E18"/>
+                    <!-- Иконка приложения 2: журнал (активная) -->
+                    <Button Classes="iconNav active" ToolTip.Tip="Электронный журнал">
+                        <Path Stretch="Uniform" Width="18" Height="18"
+                              Fill="{Binding $parent[Button].Foreground}"
+                              Data="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V3zm0 0v15a3 3 0 0 0 3 3"/>
+                    </Button>
                 </StackPanel>
 
-                <!-- Нижняя часть: информация о пользователе, настройки, выход -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,12" Spacing="4">
-                    <TextBlock x:Name="UserLabel" Foreground="#aaaaaa"
-                               FontSize="12" HorizontalAlignment="Center"
-                               Margin="8,4" />
+                <!-- Нижние иконки: пользователь, настройки, выход (декоративные) -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,0,0,12" Spacing="6"
+                            HorizontalAlignment="Center">
 
-                    <Button x:Name="BtnSettings" Content="Настройки"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
+                    <!-- Пользователь -->
+                    <Button Classes="iconNav" ToolTip.Tip="Профиль">
+                        <Path Stretch="Uniform" Width="18" Height="18"
+                              Fill="{Binding $parent[Button].Foreground}"
+                              Data="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0H5z"/>
+                    </Button>
 
-                    <Button x:Name="BtnLogout" Content="Выход"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Padding="16,10" Margin="8,2" Foreground="White" Background="#0E0E18"/>
+                    <!-- Настройки (дублирует кнопку в правой колонке) -->
+                    <Button x:Name="BtnSettingsIcon" Classes="iconNav" ToolTip.Tip="Настройки" IsVisible="False">
+                        <Path Stretch="Uniform" Width="18" Height="18"
+                              Fill="{Binding $parent[Button].Foreground}"
+                              Data="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4a8.96 8.96 0 0 0-.31-2.3l2.06-1.6-2-3.46-2.43.85a9 9 0 0 0-3.96-2.3L14 1h-4l-.36 2.19a9 9 0 0 0-3.96 2.3l-2.43-.85-2 3.46 2.06 1.6A9 9 0 0 0 3 12c0 .79.1 1.56.31 2.3l-2.06 1.6 2 3.46 2.43-.85a9 9 0 0 0 3.96 2.3L10 23h4l.36-2.19a9 9 0 0 0 3.96-2.3l2.43.85 2-3.46-2.06-1.6c.21-.74.31-1.51.31-2.3z"/>
+                    </Button>
+
+                    <!-- Выход (дублирует кнопку в правой колонке) -->
+                    <Button x:Name="BtnLogoutIcon" Classes="iconNav" ToolTip.Tip="Выход">
+                        <Path Stretch="Uniform" Width="18" Height="18"
+                              Fill="{Binding $parent[Button].Foreground}"
+                              Data="M10 17l5-5-5-5v3H3v4h7v3zm6-15h3a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-3"/>
+                    </Button>
                 </StackPanel>
 
+                <!-- Заглушка чтобы DockPanel не схлопнулся -->
+                <Panel/>
             </DockPanel>
         </Border>
 
-        <!-- Основная область — сюда подставляется выбранный раздел -->
-        <Border Grid.Column="1" Padding="16" Background="#f5f5f5">
+        <!-- ===== Колонка 1: список разделов ===== -->
+        <Border Grid.Column="1" Background="{StaticResource BgCardBrush}"
+                BorderBrush="{StaticResource BorderLightBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel>
+
+                <!-- Заголовок «РАЗДЕЛЫ» + поле поиска (декоративное) -->
+                <StackPanel DockPanel.Dock="Top" Margin="16,16,16,8" Spacing="10">
+                    <TextBlock Text="РАЗДЕЛЫ"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource FgMutedBrush}"/>
+
+                   
+                </StackPanel>
+
+                <!-- Нижний блок: пользователь -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="16,8,16,16" Spacing="4">
+                    <Border Background="#F9FAFB" CornerRadius="6" Padding="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <Border Width="28" Height="28"
+                                    Background="{StaticResource AccentPrimaryBrush}"
+                                    CornerRadius="14">
+                                <TextBlock x:Name="UserAvatarText"
+                                           Text="U"
+                                           Foreground="White"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="UserLabel"
+                                           Foreground="{StaticResource FgPrimaryBrush}"
+                                           FontSize="13" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="UserRoleLabel"
+                                           Foreground="{StaticResource FgSecondaryBrush}"
+                                           FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Button x:Name="BtnSettings" Classes="section" IsVisible="False">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Path Stretch="Uniform" Width="16" Height="16"
+                                  Fill="{Binding $parent[Button].Foreground}"
+                                  Data="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4a8.96 8.96 0 0 0-.31-2.3l2.06-1.6-2-3.46-2.43.85a9 9 0 0 0-3.96-2.3L14 1h-4l-.36 2.19a9 9 0 0 0-3.96 2.3l-2.43-.85-2 3.46 2.06 1.6A9 9 0 0 0 3 12c0 .79.1 1.56.31 2.3l-2.06 1.6 2 3.46 2.43-.85a9 9 0 0 0 3.96 2.3L10 23h4l.36-2.19a9 9 0 0 0 3.96-2.3l2.43.85 2-3.46-2.06-1.6c.21-.74.31-1.51.31-2.3z"
+                                  VerticalAlignment="Center"/>
+                            <TextBlock Text="Настройки" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnLogout" Classes="section">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Path Stretch="Uniform" Width="16" Height="16"
+                                  Fill="{Binding $parent[Button].Foreground}"
+                                  Data="M10 17l5-5-5-5v3H3v4h7v3zm6-15h3a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-3"
+                                  VerticalAlignment="Center"/>
+                            <TextBlock Text="Выход" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Список кнопок-разделов -->
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="12,4,12,0" Spacing="2">
+
+                        <Button x:Name="BtnJournal" Classes="section">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Fill="{Binding $parent[Button].Foreground}"
+                                      Data="M4 3h13a3 3 0 0 1 3 3v15H7a3 3 0 0 1-3-3V3zm0 0v15a3 3 0 0 0 3 3"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Журнал" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnSessionReport" Classes="section">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Fill="{Binding $parent[Button].Foreground}"
+                                      Data="M3 3v18h18 M7 14l4-4 4 4 5-5"
+                                      Stroke="{Binding $parent[Button].Foreground}"
+                                      StrokeThickness="2"
+                                      StrokeJoin="Round" StrokeLineCap="Round"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Отчёт по сессии" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnPlanSession" Classes="section" IsVisible="False">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Stroke="{Binding $parent[Button].Foreground}"
+                                      StrokeThickness="2"
+                                      Fill="Transparent"
+                                      StrokeJoin="Round" StrokeLineCap="Round"
+                                      Data="M3 6h18 M3 6v14a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6 M7 3v6 M17 3v6"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Планирование сессии" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnReports" Classes="section">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Stroke="{Binding $parent[Button].Foreground}"
+                                      StrokeThickness="2"
+                                      Fill="Transparent"
+                                      StrokeJoin="Round" StrokeLineCap="Round"
+                                      Data="M4 20V10 M10 20V4 M16 20v-8 M22 20H2"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Доп. отчёты" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Разделитель — ниже только для администрации -->
+                        <Border x:Name="AdminSeparator"
+                                Height="1" Background="{StaticResource BorderLightBrush}"
+                                Margin="8,12" IsVisible="False"/>
+
+                        <Button x:Name="BtnStudents" Classes="section" IsVisible="False">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Fill="{Binding $parent[Button].Foreground}"
+                                      Data="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 8a7 7 0 0 1 14 0H5z"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Студенты" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="BtnTeachers" Classes="section" IsVisible="False">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Path Stretch="Uniform" Width="16" Height="16"
+                                      Fill="{Binding $parent[Button].Foreground}"
+                                      Data="M12 3l9 4-9 4-9-4 9-4zm-7 7v5l7 3 7-3v-5"
+                                      Stroke="{Binding $parent[Button].Foreground}"
+                                      StrokeThickness="2"
+                                      StrokeJoin="Round" StrokeLineCap="Round"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Преподаватели" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Колонка 2: основная область ===== -->
+        <Border Grid.Column="3" Padding="20" Background="{StaticResource BgAppBrush}">
             <ContentControl x:Name="MainContent"/>
         </Border>
+
+         <!-- ===== GridSplitter: ручное изменение ширины панели разделов ===== -->
+        <GridSplitter Grid.Column="2"
+                      Width="4"
+                      ResizeDirection="Columns"
+                      Background="{StaticResource BorderLightBrush}"
+                      HorizontalAlignment="Stretch"
+                      Cursor="SizeWestEast"/>
 
     </Grid>
 </Window>

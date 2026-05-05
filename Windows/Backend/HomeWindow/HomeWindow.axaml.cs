@@ -9,7 +9,7 @@ namespace AIT_App
     //   роль 1 = администрация (всё + управление студентами, преподавателями, планирование сессий)
     public partial class HomeWindow : Window
     {
-        private int _role;   // роль текущего пользователя
+        private int _role;     // роль текущего пользователя
         private string _login; // логин текущего пользователя
 
         // Экземпляры UserControl — создаются один раз и переиспользуются
@@ -20,6 +20,9 @@ namespace AIT_App
         private Students _students;
         private Teachers _teachers;
 
+        // Кнопка раздела, отмеченная как активная (для подсветки)
+        private Button _activeSectionButton;
+
         public HomeWindow(string login, int role)
         {
             InitializeComponent();
@@ -27,8 +30,13 @@ namespace AIT_App
             _login = login;
             _role = role;
 
-            // Показываем имя пользователя в нижней части сайдбара
+            // Информация о пользователе в нижней части сайдбара
             UserLabel.Text = login;
+            UserRoleLabel.Text = role == 1 ? "Администратор" : "Преподаватель";
+            // Аватар: первая буква логина в верхнем регистре
+            UserAvatarText.Text = string.IsNullOrEmpty(login)
+                ? "U"
+                : login.Substring(0, 1).ToUpper();
 
             // Настраиваем видимость кнопок в зависимости от роли
             if (role == 1)
@@ -38,6 +46,8 @@ namespace AIT_App
                 BtnPlanSession.IsVisible = true;
                 BtnStudents.IsVisible = true;
                 BtnTeachers.IsVisible = true;
+                BtnSettings.IsVisible = true;
+                BtnSettingsIcon.IsVisible = true;
             }
 
             // Привязываем обработчики к кнопкам навигации
@@ -51,8 +61,24 @@ namespace AIT_App
             BtnSettings.Click += OnSettingsClick;
             BtnLogout.Click += OnLogoutClick;
 
+            // Декоративные иконки в узком сайдбаре дублируют действия
+            BtnSettingsIcon.Click += OnSettingsClick;
+            BtnLogoutIcon.Click += OnLogoutClick;
+
             // По умолчанию открываем журнал
             ShowJournal();
+        }
+
+        // Подсветка активной кнопки раздела через CSS-класс "active"
+        private void SetActiveSection(Button btn)
+        {
+            if (_activeSectionButton != null)
+                _activeSectionButton.Classes.Remove("active");
+
+            _activeSectionButton = btn;
+
+            if (_activeSectionButton != null && !_activeSectionButton.Classes.Contains("active"))
+                _activeSectionButton.Classes.Add("active");
         }
 
         // Методы для переключения разделов.
@@ -63,6 +89,7 @@ namespace AIT_App
             if (_journal == null)
                 _journal = new Journal();
             MainContent.Content = _journal;
+            SetActiveSection(BtnJournal);
         }
 
         private void ShowSessionReport()
@@ -70,6 +97,7 @@ namespace AIT_App
             if (_sessionReport == null)
                 _sessionReport = new SessionReport();
             MainContent.Content = _sessionReport;
+            SetActiveSection(BtnSessionReport);
         }
 
         private void ShowReports()
@@ -77,6 +105,7 @@ namespace AIT_App
             if (_reports == null)
                 _reports = new Reports();
             MainContent.Content = _reports;
+            SetActiveSection(BtnReports);
         }
 
         private void ShowPlanSession()
@@ -84,6 +113,7 @@ namespace AIT_App
             if (_planSession == null)
                 _planSession = new PlanSession();
             MainContent.Content = _planSession;
+            SetActiveSection(BtnPlanSession);
         }
 
         private void ShowStudents()
@@ -91,6 +121,7 @@ namespace AIT_App
             if (_students == null)
                 _students = new Students();
             MainContent.Content = _students;
+            SetActiveSection(BtnStudents);
         }
 
         private void ShowTeachers()
@@ -98,6 +129,7 @@ namespace AIT_App
             if (_teachers == null)
                 _teachers = new Teachers();
             MainContent.Content = _teachers;
+            SetActiveSection(BtnTeachers);
         }
 
         // Открывает окно настроек подключения к БД

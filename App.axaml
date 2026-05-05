@@ -1,9 +1,309 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:AIT_App.Services"
              x:Class="AIT_App.App"
              RequestedThemeVariant="Light">
+
+    <Application.Resources>
+        <!-- ========== ЦВЕТОВАЯ ПАЛИТРА ========== -->
+        <Color x:Key="BgAppColor">#F4F5F8</Color>
+        <Color x:Key="BgCardColor">#FFFFFF</Color>
+        <Color x:Key="BgSidebarNarrowColor">#13132A</Color>
+        <Color x:Key="BgSidebarColor">#1A1A2E</Color>
+        <Color x:Key="SidebarHoverColor">#2A2A4A</Color>
+        <Color x:Key="SidebarActiveBgColor">#FFFFFF</Color>
+        <Color x:Key="SidebarActiveFgColor">#1A1A2E</Color>
+
+        <Color x:Key="FgPrimaryColor">#1F2937</Color>
+        <Color x:Key="FgSecondaryColor">#6B7280</Color>
+        <Color x:Key="FgMutedColor">#9CA3AF</Color>
+
+        <Color x:Key="BorderLightColor">#E5E7EB</Color>
+        <Color x:Key="BorderInputColor">#D1D5DB</Color>
+
+        <Color x:Key="AccentPrimaryColor">#1E2240</Color>
+        <Color x:Key="AccentPrimaryHoverColor">#2A3055</Color>
+        <Color x:Key="AccentSoftColor">#E0E7FF</Color>
+        <Color x:Key="AccentSoftFgColor">#3730A3</Color>
+
+        <!-- Бейджи оценок: 5 — зелёный, 4 и 3 — жёлтый, 2 — красный, Н — серый -->
+        <Color x:Key="Grade5BgColor">#DCFCE7</Color>
+        <Color x:Key="Grade5FgColor">#15803D</Color>
+        <Color x:Key="Grade4BgColor">#FEF9C3</Color>
+        <Color x:Key="Grade4FgColor">#A16207</Color>
+        <Color x:Key="Grade3BgColor">#FEF9C3</Color>
+        <Color x:Key="Grade3FgColor">#A16207</Color>
+        <Color x:Key="Grade2BgColor">#FEE2E2</Color>
+        <Color x:Key="Grade2FgColor">#B91C1C</Color>
+        <Color x:Key="GradeNBgColor">#F3F4F6</Color>
+        <Color x:Key="GradeNFgColor">#6B7280</Color>
+
+        <!-- Brushes -->
+        <SolidColorBrush x:Key="BgAppBrush" Color="{StaticResource BgAppColor}"/>
+        <SolidColorBrush x:Key="BgCardBrush" Color="{StaticResource BgCardColor}"/>
+        <SolidColorBrush x:Key="BgSidebarNarrowBrush" Color="{StaticResource BgSidebarNarrowColor}"/>
+        <SolidColorBrush x:Key="BgSidebarBrush" Color="{StaticResource BgSidebarColor}"/>
+        <SolidColorBrush x:Key="SidebarHoverBrush" Color="{StaticResource SidebarHoverColor}"/>
+        <SolidColorBrush x:Key="FgPrimaryBrush" Color="{StaticResource FgPrimaryColor}"/>
+        <SolidColorBrush x:Key="FgSecondaryBrush" Color="{StaticResource FgSecondaryColor}"/>
+        <SolidColorBrush x:Key="FgMutedBrush" Color="{StaticResource FgMutedColor}"/>
+        <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLightColor}"/>
+        <SolidColorBrush x:Key="BorderInputBrush" Color="{StaticResource BorderInputColor}"/>
+        <SolidColorBrush x:Key="AccentPrimaryBrush" Color="{StaticResource AccentPrimaryColor}"/>
+        <SolidColorBrush x:Key="AccentPrimaryHoverBrush" Color="{StaticResource AccentPrimaryHoverColor}"/>
+        <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoftColor}"/>
+        <SolidColorBrush x:Key="AccentSoftFgBrush" Color="{StaticResource AccentSoftFgColor}"/>
+
+        <SolidColorBrush x:Key="Grade5BgBrush" Color="{StaticResource Grade5BgColor}"/>
+        <SolidColorBrush x:Key="Grade5FgBrush" Color="{StaticResource Grade5FgColor}"/>
+        <SolidColorBrush x:Key="Grade4BgBrush" Color="{StaticResource Grade4BgColor}"/>
+        <SolidColorBrush x:Key="Grade4FgBrush" Color="{StaticResource Grade4FgColor}"/>
+        <SolidColorBrush x:Key="Grade3BgBrush" Color="{StaticResource Grade3BgColor}"/>
+        <SolidColorBrush x:Key="Grade3FgBrush" Color="{StaticResource Grade3FgColor}"/>
+        <SolidColorBrush x:Key="Grade2BgBrush" Color="{StaticResource Grade2BgColor}"/>
+        <SolidColorBrush x:Key="Grade2FgBrush" Color="{StaticResource Grade2FgColor}"/>
+        <SolidColorBrush x:Key="GradeNBgBrush" Color="{StaticResource GradeNBgColor}"/>
+        <SolidColorBrush x:Key="GradeNFgBrush" Color="{StaticResource GradeNFgColor}"/>
+
+        <!-- Конвертеры -->
+        <conv:GradeBackgroundConverter x:Key="GradeBgConv"/>
+        <conv:GradeForegroundConverter x:Key="GradeFgConv"/>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme/>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+
+        <!-- ========== ТИПОГРАФИКА ========== -->
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{StaticResource FgSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="{StaticResource FgSecondaryBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <!-- ========== КАРТОЧКА ========== -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderLightBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <!-- ========== ПОЛЯ ВВОДА ========== -->
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="CalendarDatePicker">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <!-- ========== КНОПКИ ========== -->
+        <!-- Базовая кнопка: вторичная по умолчанию (белая с тонкой границей) -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{StaticResource BgCardBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderInputBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinHeight" Value="34"/>
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F9FAFB"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FgMutedBrush}"/>
+        </Style>
+        <Style Selector="Button:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F3F4F6"/>
+        </Style>
+        <Style Selector="Button:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F9FAFB"/>
+            <Setter Property="Foreground" Value="{StaticResource FgMutedBrush}"/>
+        </Style>
+
+        <!-- Основная (primary) кнопка: тёмно-синяя -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource AccentPrimaryBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource AccentPrimaryHoverBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimaryHoverBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.primary:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#181B33"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <!-- Опасная кнопка: красная (для удаления) -->
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="#FEE2E2"/>
+            <Setter Property="Foreground" Value="#B91C1C"/>
+            <Setter Property="BorderBrush" Value="#FCA5A5"/>
+        </Style>
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FECACA"/>
+            <Setter Property="Foreground" Value="#991B1B"/>
+            <Setter Property="BorderBrush" Value="#F87171"/>
+        </Style>
+
+        <!-- Pill-кнопка (для переключателей фильтра типа оценок) -->
+        <Style Selector="Button.pill">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource FgSecondaryBrush}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="Button.pill:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.pill.active">
+            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentSoftFgBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.pill.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#C7D2FE"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentSoftFgBrush}"/>
+        </Style>
+
+        <!-- Кнопки-разделы внутри сайдбара "РАЗДЕЛЫ" -->
+        <Style Selector="Button.section">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinHeight" Value="36"/>
+        </Style>
+        <Style Selector="Button.section:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.section.active">
+            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentSoftFgBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.section.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#C7D2FE"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentSoftFgBrush}"/>
+        </Style>
+
+        <!-- Кнопка-иконка для узкого сайдбара -->
+        <Style Selector="Button.iconNav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#9CA3D4"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Button.iconNav:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SidebarHoverBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.iconNav.active">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.iconNav.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentPrimaryBrush}"/>
+        </Style>
+
+        <!-- ========== TabControl ========== -->
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="Foreground" Value="{StaticResource FgSecondaryBrush}"/>
+        </Style>
+        <Style Selector="TabItem:selected">
+            <Setter Property="Foreground" Value="{StaticResource AccentPrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <!-- ========== DataGrid ========== -->
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource BorderLightBrush}"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="RowBackground" Value="Transparent"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{StaticResource FgSecondaryBrush}"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Padding" Value="12,8"/>
+    <Setter Property="SeparatorBrush" Value="{StaticResource BorderLightBrush}"/>
+    <Setter Property="MinHeight" Value="36"/>
+</Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="MinHeight" Value="40"/>
+        </Style>
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="#F9FAFB"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Foreground" Value="{StaticResource FgPrimaryBrush}"/>
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <!-- ========== ScrollBar (тонкие современные) ========== -->
+        <Style Selector="ScrollBar">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
     </Application.Styles>
 </Application>

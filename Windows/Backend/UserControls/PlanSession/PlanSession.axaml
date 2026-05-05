@@ -3,65 +3,114 @@
              x:Class="AIT_App.PlanSession"
              x:CompileBindings="False">
 
-    <Grid ColumnDefinitions="300,*" ColumnSpacing="12">
+    <Grid RowDefinitions="Auto,*" RowSpacing="14">
 
-        <!-- Левая панель: форма добавления / редактирования -->
-        <Border Grid.Column="0" Padding="12" CornerRadius="6" Background="White">
-            <StackPanel Spacing="10">
-                <TextBlock Text="Планирование сессий" FontWeight="SemiBold"/>
+        <!-- ===== Заголовок ===== -->
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="Планирование сессии" Classes="h1"/>
+            <TextBlock Text="Запланируйте даты экзаменов — система автоматически переклассифицирует оценки"
+                       Classes="muted"/>
+        </StackPanel>
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Предмет"/>
-                    <ComboBox x:Name="SubjectCombo" HorizontalAlignment="Stretch"/>
-                </StackPanel>
+        <!-- ===== Контент: форма слева, таблица справа ===== -->
+        <Grid Grid.Row="1" ColumnDefinitions="320,*" ColumnSpacing="14">
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Дата сессии"/>
-                    <CalendarDatePicker x:Name="SessionDatePicker"/>
-                </StackPanel>
+            <!-- ===== Левая карточка: форма ===== -->
+            <Border Grid.Column="0" Classes="card">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Новая сессия" Classes="h2"/>
 
-                <!-- Кнопки управления -->
-                <WrapPanel Orientation="Horizontal">
-                    <Button x:Name="BtnAdd" Content="Добавить" Margin="0,0,8,8"/>
-                    <Button x:Name="BtnEdit" Content="Изменить выбранное" Margin="0,0,8,8"/>
-                    <Button x:Name="BtnDelete" Content="Удалить выбранное" Margin="0,0,8,8"/>
-                </WrapPanel>
-
-                <!-- Панель режима редактирования — видна только при нажатии "Изменить" -->
-                <Border x:Name="EditModeBar" Padding="8" CornerRadius="4"
-                        Background="#fff3cd" IsVisible="False">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Режим редактирования" FontWeight="SemiBold" Foreground="#856404"/>
-                        <TextBlock x:Name="EditModeLabel" TextWrapping="Wrap" FontSize="12"/>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="BtnSaveEdit" Content="Сохранить"/>
-                            <Button x:Name="BtnCancelEdit" Content="Отмена"/>
-                        </StackPanel>
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="Предмет" Classes="label"/>
+                        <ComboBox x:Name="SubjectCombo" HorizontalAlignment="Stretch"/>
                     </StackPanel>
-                </Border>
 
-                <!-- Пояснение: почему важно планировать сессии -->
-                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="#666"
-                           Text="После добавления или удаления сессии система автоматически переклассифицирует оценки (Текущая / Экзаменационная)."/>
-            </StackPanel>
-        </Border>
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="Дата сессии" Classes="label"/>
+                        <CalendarDatePicker x:Name="SessionDatePicker"
+                                            HorizontalAlignment="Stretch"/>
+                    </StackPanel>
 
-        <!-- Правая часть: таблица запланированных сессий -->
-        <Border Grid.Column="1" Padding="12" CornerRadius="6" Background="White">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Запланированные сессии" FontWeight="SemiBold"/>
-                <DataGrid x:Name="SessionsGrid"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          GridLinesVisibility="All"
-                          HeadersVisibility="Column">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Предмет" Binding="{Binding [Предмет]}" Width="*"/>
-                        <DataGridTextColumn Header="Дата сессии" Binding="{Binding [ДатаСессии]}" Width="150"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </StackPanel>
-        </Border>
+                    <!-- Кнопки управления -->
+                    <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button x:Name="BtnAdd" Classes="primary"
+                                Content="Добавить" Margin="0,0,8,8"/>
+                        <Button x:Name="BtnEdit"
+                                Content="Изменить" Margin="0,0,8,8"/>
+                        <Button x:Name="BtnDelete" Classes="danger"
+                                Content="Удалить" Margin="0,0,0,8"/>
+                    </WrapPanel>
 
+                    <!-- Панель режима редактирования -->
+                    <Border x:Name="EditModeBar"
+                            Background="#FFFBEB"
+                            BorderBrush="#FDE68A"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12"
+                            IsVisible="False">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Path Stretch="Uniform" Width="14" Height="14"
+                                      Fill="#A16207"
+                                      Data="M12 2 L22 20 L2 20 Z M12 9v5 M12 17h.01"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Text="Режим редактирования"
+                                           FontWeight="SemiBold"
+                                           Foreground="#A16207"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock x:Name="EditModeLabel"
+                                       TextWrapping="Wrap" FontSize="12"
+                                       Foreground="{StaticResource FgPrimaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="BtnSaveEdit" Classes="primary"
+                                        Content="Сохранить"/>
+                                <Button x:Name="BtnCancelEdit"
+                                        Content="Отмена"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Подсказка -->
+                    <Border Background="#EFF6FF"
+                            BorderBrush="#BFDBFE"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10">
+                        <TextBlock TextWrapping="Wrap" FontSize="11"
+                                   Foreground="#1E40AF"
+                                   Text="После изменения сессий оценки автоматически перераспределяются между типами «Текущая» и «Экзаменационная»."/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== Правая карточка: таблица ===== -->
+            <Border Grid.Column="1" Classes="card" Padding="0">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Padding="16,12"
+                            BorderBrush="{StaticResource BorderLightBrush}"
+                            BorderThickness="0,0,0,1">
+                        <TextBlock Text="Запланированные сессии"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource FgPrimaryBrush}"
+                                   FontSize="14"/>
+                    </Border>
+
+                    <DataGrid x:Name="SessionsGrid" Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Margin="4"  >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Предмет"
+                                                Binding="{Binding [Предмет]}" Width="*"/>
+                            <DataGridTextColumn Header="Дата сессии"
+                                                Binding="{Binding [ДатаСессии]}" Width="180"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+        </Grid>
     </Grid>
 </UserControl>

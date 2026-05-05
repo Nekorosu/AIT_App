@@ -1,7 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Data;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using AIT_App.Services;
 
@@ -97,22 +102,77 @@ namespace AIT_App
             _lastGrades = BuildPivot(flat);
             _lastPerf = BuildPerformance(flat);
 
-            // Генерируем колонки GradesGrid вручную: Caption = название предмета, ColumnName = Col{i}
+            // Генерируем колонки GradesGrid вручную:
+            //   ФИО — обычная текстовая колонка;
+            //   остальные (предметы) — DataGridTemplateColumn с цветным бейджем оценки.
             GradesGrid.Columns.Clear();
             foreach (DataColumn col in _lastGrades.Columns)
             {
-                GradesGrid.Columns.Add(new Avalonia.Controls.DataGridTextColumn
+                if (col.ColumnName == "ФИО")
                 {
-                    Header = col.Caption,
-                    Binding = new Avalonia.Data.Binding($"[{col.ColumnName}]"),
-                    Width = col.ColumnName == "ФИО"
-                        ? new Avalonia.Controls.DataGridLength(1, Avalonia.Controls.DataGridLengthUnitType.Star)
-                        : new Avalonia.Controls.DataGridLength(90)
-                });
+                    GradesGrid.Columns.Add(new DataGridTextColumn
+                    {
+                        Header = col.Caption,
+                        Binding = new Binding($"[{col.ColumnName}]"),
+                        Width = new DataGridLength(1, DataGridLengthUnitType.Star)
+                    });
+                }
+                else
+                {
+                    GradesGrid.Columns.Add(new DataGridTemplateColumn
+                    {
+                        Header = col.Caption,
+                        Width = new DataGridLength(110),
+                        CellTemplate = BuildGradeCellTemplate(col.ColumnName)
+                    });
+                }
             }
 
             GradesGrid.ItemsSource = DataBaseCon.ToRowList(_lastGrades);
             PerfGrid.ItemsSource = DataBaseCon.ToRowList(_lastPerf);
+        }
+
+        // Создаёт шаблон ячейки с цветным бейджем оценки.
+        // columnName — имя колонки в DataTable (например "Col0"), к которому биндимся.
+        private FuncDataTemplate<object> BuildGradeCellTemplate(string columnName)
+        {
+            // Конвертеры stateless — создаём свежие экземпляры для каждой ячейки.
+            // Они сами берут кисти из ресурсов приложения.
+            var bgConv = new GradeBackgroundConverter();
+            var fgConv = new GradeForegroundConverter();
+
+            return new FuncDataTemplate<object>((row, _) =>
+            {
+                var border = new Border
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(10, 3),
+                    MinWidth = 36
+                };
+
+                var text = new TextBlock
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontWeight = FontWeight.SemiBold,
+                    FontSize = 13
+                };
+
+                // Биндим текст ячейки на нужную колонку DataRow
+                text.Bind(TextBlock.TextProperty,
+                    new Binding($"[{columnName}]"));
+
+                // Биндим цвета через конвертеры
+                border.Bind(Border.BackgroundProperty,
+                    new Binding($"[{columnName}]") { Converter = bgConv });
+                text.Bind(TextBlock.ForegroundProperty,
+                    new Binding($"[{columnName}]") { Converter = fgConv });
+
+                border.Child = text;
+                return border;
+            });
         }
 
         // Преобразует плоскую таблицу в pivot: строки = студенты, столбцы = предметы

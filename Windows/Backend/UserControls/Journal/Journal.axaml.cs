@@ -23,13 +23,24 @@ namespace AIT_App
         // Последняя загруженная таблица — нужна для экспорта
         private DataTable _currentTable = null;
 
+        // Pill-кнопки фильтра типа оценки. _typePills[i] соответствует TypeCombo.SelectedIndex == i
+        private Button[] _typePills;
+
         public Journal()
         {
             InitializeComponent();
 
-            // Заполняем фильтр типов оценок
+            // Заполняем фильтр типов оценок (скрытый ComboBox используется логикой загрузки)
             TypeCombo.ItemsSource = new[] { "Все", "Текущая", "Экзаменационная" };
             TypeCombo.SelectedIndex = 0;
+
+            // Привязываем pill-кнопки фильтра типа к TypeCombo.SelectedIndex
+            _typePills = new[] { BtnTypeAll, BtnTypeCurrent, BtnTypeExam };
+            for (int i = 0; i < _typePills.Length; i++)
+            {
+                int idx = i; // захват для замыкания
+                _typePills[i].Click += (s, e) => SelectTypePill(idx);
+            }
 
             // При смене группы — перезагружаем список предметов
             GroupCombo.SelectionChanged += (s, e) => LoadSubjects();
@@ -53,6 +64,29 @@ namespace AIT_App
             // Загружаем данные при открытии раздела
             LoadGroups();
             LoadGradeValues();
+        }
+
+        // Переключение pill-кнопок типа оценки.
+        // Подсвечивает активную кнопку через CSS-класс "active"
+        // и обновляет скрытый TypeCombo, который используется в LoadJournal().
+        private void SelectTypePill(int index)
+        {
+            for (int i = 0; i < _typePills.Length; i++)
+            {
+                if (i == index)
+                {
+                    if (!_typePills[i].Classes.Contains("active"))
+                        _typePills[i].Classes.Add("active");
+                }
+                else
+                {
+                    _typePills[i].Classes.Remove("active");
+                }
+            }
+            TypeCombo.SelectedIndex = index;
+
+            // Если данные уже загружены — перезагружаем под новый фильтр
+            if (_currentTable != null) LoadJournal();
         }
 
         // Загружает список групп из БД
@@ -192,6 +226,9 @@ namespace AIT_App
             _currentTable = table;
             JournalGrid.ItemsSource = DataBaseCon.ToRowList(table);
 
+            // Обновляем заголовок карточки и мета-инфо
+            GridHeaderLabel.Text = $"{subject} — {group}";
+            GridMetaLabel.Text = $"{table.Rows.Count} оценок";
             StatusLabel.Text = $"Загружено записей: {table.Rows.Count}";
         }
 

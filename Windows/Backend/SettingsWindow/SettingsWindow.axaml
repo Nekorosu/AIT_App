@@ -2,22 +2,45 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="AIT_App.SettingsWindow"
         Title="Настройки подключения"
-        Width="640"
-        Height="320"
+        Width="640" Height="380"
         WindowStartupLocation="CenterOwner"
-        CanResize="True">
-    <!-- ДИЗАЙНЕР: поле строки подключения — многострочное; разметка рядом с .axaml.cs (Avalonia). -->
-    <Grid Margin="16" RowDefinitions="Auto,*,Auto" RowSpacing="12">
-        <TextBlock Text="Строка подключения (MySQL / MariaDB)" FontWeight="SemiBold" />
-        <TextBox x:Name="ConnectionTextBox"
-                 Grid.Row="1"
-                 TextWrapping="Wrap"
-                 MinHeight="140"
-                 Watermark="Server=...;Port=3306;Database=...;User=...;Password=...;" />
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-            <Button x:Name="BtnTest" Content="Проверить соединение" />
-            <Button x:Name="BtnSave" Content="Сохранить" />
-            <Button x:Name="BtnClose" Content="Закрыть" />
+        CanResize="True"
+        Background="{StaticResource BgAppBrush}">
+
+    <Grid Margin="20" RowDefinitions="Auto,*,Auto" RowSpacing="14">
+
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="Настройки подключения" Classes="h1"/>
+            <TextBlock Text="Параметры соединения с MySQL / MariaDB сервером"
+                       Classes="muted"/>
         </StackPanel>
+
+        <!-- Карточка с полем ввода -->
+        <Border Grid.Row="1" Classes="card">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="Строка подключения"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource FgPrimaryBrush}"
+                           FontSize="13"
+                           Margin="0,0,0,8"/>
+                <TextBox x:Name="ConnectionTextBox"
+                         Grid.Row="1"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="False"
+                         FontFamily="Consolas, Menlo, monospace"
+                         FontSize="12"
+                         Watermark="Server=...;Port=3306;Database=...;User=...;Password=...;"/>
+            </Grid>
+        </Border>
+
+        <!-- Кнопки внизу -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
+            <Button Grid.Column="0" x:Name="BtnTest" Content="Проверить соединение"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="BtnClose" Content="Закрыть"/>
+                <Button x:Name="BtnSave" Classes="primary" Content="Сохранить"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
