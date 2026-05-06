@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AIT_App.Teachers"
+             x:CompileBindings="False">
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="14">
+
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="Преподаватели" Classes="h1"/>
+            <TextBlock Text="Управление списком преподавателей и их дисциплинами" Classes="muted"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="340,*" ColumnSpacing="14">
+
+            <!-- Левая карточка: форма -->
+            <Border Grid.Column="0" Classes="card">
+                <StackPanel Spacing="12">
+                    <TextBlock x:Name="FormTitle" Text="Добавить преподавателя" Classes="h2"/>
+
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="ФИО" Classes="label"/>
+                        <TextBox x:Name="FioInput" Watermark="Иванов Иван Иванович"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="Телефон (необязательно)" Classes="label"/>
+                        <TextBox x:Name="PhoneInput" Watermark="+7 000 000 00 00"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="0">
+                        <TextBlock Text="Дисциплина (необязательно)" Classes="label"/>
+                        <ComboBox x:Name="SubjectCombo"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="Выберите дисциплину"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                        <Button x:Name="BtnSave" Classes="primary" Content="Сохранить"/>
+                        <Button x:Name="BtnCancel" Content="Отмена" IsVisible="False"/>
+                    </StackPanel>
+
+                    <Border Background="#F9FAFB" CornerRadius="6" Padding="10">
+                        <TextBlock Text="Для редактирования выберите преподавателя в таблице справа."
+                                   TextWrapping="Wrap" FontSize="11"
+                                   Foreground="{StaticResource FgSecondaryBrush}"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Правая карточка: таблица -->
+            <Border Grid.Column="1" Classes="card" Padding="0">
+                <Grid RowDefinitions="Auto,*,Auto">
+
+                    <Border Grid.Row="0" Padding="16,12"
+                            BorderBrush="{StaticResource BorderLightBrush}"
+                            BorderThickness="0,0,0,1">
+                        <TextBlock Text="Список преподавателей"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource FgPrimaryBrush}"
+                                   FontSize="14"/>
+                    </Border>
+
+                    <DataGrid x:Name="TeachersGrid" Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Margin="4"  >
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*" />
+                            <DataGridTextColumn Header="Телефон" Binding="{Binding [Телефон]}" Width="150"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Padding="16,12"
+                            BorderBrush="{StaticResource BorderLightBrush}"
+                            BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="BtnEdit" Content="Изменить выбранного"/>
+                            <Button x:Name="BtnDelete" Classes="danger" Content="Удалить выбранного"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

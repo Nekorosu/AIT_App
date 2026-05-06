@@ -41,7 +41,7 @@ public static class ExportService
         var rowCount = table.Rows.Count;
 
         for (var c = 0; c < colCount; c++)
-            ws.Cell(1, c + 1).Value = table.Columns[c].ColumnName;
+            ws.Cell(1, c + 1).Value = table.Columns[c].Caption;
 
         ApplyHeader(ws.Range(1, 1, 1, colCount));
 

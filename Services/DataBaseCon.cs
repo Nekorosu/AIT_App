@@ -1,133 +1,154 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using MySqlConnector;
 
-namespace AIT_App.Services;
-
-/// <summary>
-/// Обёртка над MySqlConnector (ADO.NET).
-/// КОДЕР: все методы — асинхронные. Вызывайте через await, иначе UI замёрзнет
-/// на сетевом запросе к удалённой БД (192.168.x.x).
-/// При ошибке методы возвращают null/-1 И записывают сообщение в <see cref="LastError"/>,
-/// плюс пишут полный стек в Debug Output (View → Tool Windows → Debug в Rider).
-/// </summary>
-public sealed class DataBaseCon
+namespace AIT_App.Services
 {
-    private readonly string _connectionString;
-
-    /// <summary>
-    /// Сообщение последней ошибки SQL. null — последний вызов прошёл успешно.
-    /// КОДЕР: показывайте пользователю при rc &lt; 0 / null-результате,
-    /// чтобы тестировщик мог писать вменяемые баг-репорты.
-    /// </summary>
-    public string? LastError { get; private set; }
-
-    public DataBaseCon() : this(ConnectionStringService.Load()) { }
-
-    public DataBaseCon(string connectionString)
+    // Класс для работы с базой данных MySQL.
+    // Содержит три основных метода: SELECT, скалярный запрос и запрос без результата (INSERT/UPDATE/DELETE).
+    public class DataBaseCon
     {
-        _connectionString = connectionString;
-    }
+        // Строка подключения к БД — читается из config.json при создании объекта
+        private string _connectionString;
 
-    /// <summary>SELECT → DataTable. null при ошибке (см. <see cref="LastError"/>).</summary>
-    public async Task<DataTable?> ExecuteQueryAsync(string sql, Dictionary<string, object?>? parameters = null)
-    {
-        LastError = null;
-        try
+        public DataBaseCon()
         {
-            await using var connection = new MySqlConnection(_connectionString);
-            await connection.OpenAsync();
-            await using var command = new MySqlCommand(sql, connection);
-            AddParameters(command, parameters);
-            await using var reader = await command.ExecuteReaderAsync();
-            var table = new DataTable();
-            table.Load(reader);
-            return table;
+            // Загружаем строку подключения из файла config.json
+            _connectionString = ConnectionStringService.Load();
         }
-        catch (Exception ex)
-        {
-            LastError = ex.Message;
-            Debug.WriteLine($"[DB] ExecuteQuery FAIL\nSQL: {sql}\n{ex}");
-            return null;
-        }
-    }
 
-    public async Task<object?> ExecuteScalarAsync(string sql, Dictionary<string, object?>? parameters = null)
-    {
-        LastError = null;
-        try
+        // Выполняет SELECT-запрос и возвращает таблицу с результатами.
+        // parameters — словарь параметров вида { "имя": значение }, чтобы защититься от SQL-инъекций.
+        // Возвращает null если произошла ошибка.
+        public DataTable ExecuteQuery(string sql, Dictionary<string, object> parameters = null)
         {
-            await using var connection = new MySqlConnection(_connectionString);
-            await connection.OpenAsync();
-            await using var command = new MySqlCommand(sql, connection);
-            AddParameters(command, parameters);
-            return await command.ExecuteScalarAsync();
-        }
-        catch (Exception ex)
-        {
-            LastError = ex.Message;
-            Debug.WriteLine($"[DB] ExecuteScalar FAIL\nSQL: {sql}\n{ex}");
-            return null;
-        }
-    }
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                connection.Open();
 
-    /// <summary>
-    /// Возвращает: число затронутых строк; -2 при дубликате уникального ключа (MySQL 1062);
-    /// -1 при прочей ошибке (см. <see cref="LastError"/>).
-    /// </summary>
-    public async Task<int> ExecuteNonQueryAsync(string sql, Dictionary<string, object?>? parameters = null)
-    {
-        LastError = null;
-        try
-        {
-            await using var connection = new MySqlConnection(_connectionString);
-            await connection.OpenAsync();
-            await using var command = new MySqlCommand(sql, connection);
-            AddParameters(command, parameters);
-            return await command.ExecuteNonQueryAsync();
-        }
-        catch (MySqlException ex) when (ex.Number == 1062)
-        {
-            LastError = ex.Message;
-            Debug.WriteLine($"[DB] ExecuteNonQuery DUPLICATE\nSQL: {sql}\n{ex}");
-            return -2;
-        }
-        catch (Exception ex)
-        {
-            LastError = ex.Message;
-            Debug.WriteLine($"[DB] ExecuteNonQuery FAIL\nSQL: {sql}\n{ex}");
-            return -1;
-        }
-    }
+                using var command = new MySqlCommand(sql, connection);
 
-    /// <summary>Проверка текущей строки подключения.</summary>
-    public Task<(bool Ok, string? Message)> ConnectionCheckAsync() => CheckStaticAsync(_connectionString);
+                // Добавляем параметры запроса если они переданы
+                if (parameters != null)
+                {
+                    foreach (var param in parameters)
+                        command.Parameters.AddWithValue("@" + param.Key, param.Value ?? DBNull.Value);
+                }
 
-    /// <summary>Проверка произвольной строки подключения (асинхронная — для AuthWindow и SettingsWindow).</summary>
-    public static async Task<(bool Ok, string? Message)> CheckStaticAsync(string connectionString)
-    {
-        try
-        {
-            await using var connection = new MySqlConnection(connectionString);
-            await connection.OpenAsync();
-            return (true, null);
+                // Заполняем таблицу данными через адаптер
+                var table = new DataTable();
+                using var adapter = new MySqlDataAdapter(command);
+                adapter.Fill(table);
+                return table;
+            }
+            catch (Exception ex)
+            {
+                // Выводим ошибку в консоль для отладки
+                Console.WriteLine("Ошибка ExecuteQuery: " + ex.Message);
+                return null;
+            }
         }
-        catch (Exception ex)
+
+        // Выполняет запрос и возвращает одно значение (например COUNT или ID).
+        // Возвращает null если произошла ошибка или результат пустой.
+        public object ExecuteScalar(string sql, Dictionary<string, object> parameters = null)
         {
-            Debug.WriteLine($"[DB] CheckStatic FAIL\n{ex}");
-            return (false, ex.Message);
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                connection.Open();
+
+                using var command = new MySqlCommand(sql, connection);
+
+                if (parameters != null)
+                {
+                    foreach (var param in parameters)
+                        command.Parameters.AddWithValue("@" + param.Key, param.Value ?? DBNull.Value);
+                }
+
+                var result = command.ExecuteScalar();
+
+                // DBNull означает что в БД значение NULL — возвращаем C# null
+                return result == DBNull.Value ? null : result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка ExecuteScalar: " + ex.Message);
+                return null;
+            }
         }
-    }
 
-    private static void AddParameters(MySqlCommand command, Dictionary<string, object?>? parameters)
-    {
-        if (parameters is null)
-            return;
-
-        foreach (var (name, value) in parameters)
+        // Выполняет INSERT, UPDATE или DELETE.
+        // Возвращает: количество затронутых строк, -2 если запись уже существует (дубликат), -1 при ошибке.
+        public int ExecuteNonQuery(string sql, Dictionary<string, object> parameters = null)
         {
-            var paramName = name.StartsWith('@') ? name : "@" + name;
-            command.Parameters.AddWithValue(paramName, value ?? DBNull.Value);
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                connection.Open();
+
+                using var command = new MySqlCommand(sql, connection);
+
+                if (parameters != null)
+                {
+                    foreach (var param in parameters)
+                        command.Parameters.AddWithValue("@" + param.Key, param.Value ?? DBNull.Value);
+                }
+
+                return command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex) when (ex.Number == 1062)
+            {
+                // Ошибка 1062 — попытка добавить дублирующую запись (нарушение уникального ключа)
+                Console.WriteLine("Дубликат: " + ex.Message);
+                return -2;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка ExecuteNonQuery: " + ex.Message);
+                return -1;
+            }
+        }
+
+        // Проверяет соединение с базой данных.
+        // Возвращает (true, null) если всё хорошо, или (false, "текст ошибки") если нет.
+        public (bool Ok, string Error) ConnectionCheck()
+        {
+            return ConnectionCheck(_connectionString);
+        }
+
+        // Конвертирует DataTable в List<Dictionary<string, object>> для использования
+        // как ItemsSource в Avalonia DataGrid: {Binding [ColumnName]} работает через
+        // стандартный Dictionary-индексер, тогда как DataRowView не поддерживается.
+        public static List<Dictionary<string, object>> ToRowList(DataTable table)
+        {
+            var list = new List<Dictionary<string, object>>();
+            if (table == null) return list;
+            foreach (DataRow row in table.Rows)
+            {
+                var dict = new Dictionary<string, object>();
+                foreach (DataColumn col in table.Columns)
+                    dict[col.ColumnName] = row[col] == DBNull.Value ? null : row[col];
+                list.Add(dict);
+            }
+            return list;
+        }
+
+        // Статичная версия — принимает произвольную строку подключения (для SettingsWindow)
+        public static (bool Ok, string Error) ConnectionCheck(string connectionString)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(connectionString);
+                connection.Open();
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
         }
     }
 }

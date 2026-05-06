@@ -1,67 +1,155 @@
-using AIT_App.Services;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 
-namespace AIT_App;
-
-public partial class HomeWindow : Window
+namespace AIT_App
 {
-    private readonly string _login;
-    private readonly int _role;
-
-    private Journal? _journal;
-    private SessionReport? _sessionReport;
-    private PlanSession? _planSession;
-    private Reports? _reports;
-
-    // ДИЗАЙНЕР: пустой конструктор убирает предупреждение AVLN3001 (превью XAML); в приложении используется перегрузка с логином.
-    public HomeWindow()
-        : this(string.Empty, 0)
+    // Главное окно приложения с боковой навигацией.
+    // Принимает логин и роль от AuthWindow:
+    //   роль 0 = преподаватель (журнал, отчёты)
+    //   роль 1 = администрация (всё + управление студентами, преподавателями, планирование сессий)
+    public partial class HomeWindow : Window
     {
-    }
+        private int _role;     // роль текущего пользователя
+        private string _login; // логин текущего пользователя
 
-    public HomeWindow(string login, int role)
-    {
-        InitializeComponent();
-        _login = login;
-        _role = role;
+        // Экземпляры UserControl — создаются один раз и переиспользуются
+        private Journal _journal;
+        private SessionReport _sessionReport;
+        private PlanSession _planSession;
+        private Reports _reports;
+        private Students _students;
+        private Teachers _teachers;
 
-        WelcomeText.Text = $"Добро пожаловать, {_login}";
-        RoleText.Text = role == 0 ? "Роль: преподаватель" : $"Роль: {_role}";
+        // Кнопка раздела, отмеченная как активная (для подсветки)
+        private Button _activeSectionButton;
 
-        NavJournal.Click += (_, _) => ShowControl(ref _journal, () => new Journal());
-        NavSessionReport.Click += (_, _) => ShowControl(ref _sessionReport, () => new SessionReport());
-        NavPlanSession.Click += (_, _) => ShowControl(ref _planSession, () => new PlanSession());
-        NavReports.Click += (_, _) => ShowControl(ref _reports, () => new Reports());
+        public HomeWindow(string login, int role)
+        {
+            InitializeComponent();
 
-        BtnSettings.Click += OnSettingsClick;
-        BtnLogout.Click += OnLogoutClick;
+            _login = login;
+            _role = role;
 
-        ShowControl(ref _journal, () => new Journal());
-    }
+            // Информация о пользователе в нижней части сайдбара
+            UserLabel.Text = login;
+            UserRoleLabel.Text = role == 1 ? "Администратор" : "Преподаватель";
+            // Аватар: первая буква логина в верхнем регистре
+            UserAvatarText.Text = string.IsNullOrEmpty(login)
+                ? "U"
+                : login.Substring(0, 1).ToUpper();
 
-    private void ShowControl<T>(ref T? field, Func<T> factory) where T : Control
-    {
-        field ??= factory();
-        ContentArea.Content = field;
-    }
+            // Настраиваем видимость кнопок в зависимости от роли
+            if (role == 1)
+            {
+                // Администрация видит все кнопки
+                AdminSeparator.IsVisible = true;
+                BtnPlanSession.IsVisible = true;
+                BtnStudents.IsVisible = true;
+                BtnTeachers.IsVisible = true;
+                BtnSettings.IsVisible = true;
+                BtnSettingsIcon.IsVisible = true;
+            }
 
-    private async void OnSettingsClick(object? sender, RoutedEventArgs e)
-    {
-        var dlg = new SettingsWindow();
-        await dlg.ShowDialog(this);
-    }
+            // Привязываем обработчики к кнопкам навигации
+            BtnJournal.Click += (s, e) => ShowJournal();
+            BtnSessionReport.Click += (s, e) => ShowSessionReport();
+            BtnReports.Click += (s, e) => ShowReports();
+            BtnPlanSession.Click += (s, e) => ShowPlanSession();
+            BtnStudents.Click += (s, e) => ShowStudents();
+            BtnTeachers.Click += (s, e) => ShowTeachers();
 
-    private void OnLogoutClick(object? sender, RoutedEventArgs e)
-    {
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
-            return;
+            BtnSettings.Click += OnSettingsClick;
+            BtnLogout.Click += OnLogoutClick;
 
-        var auth = new AuthWindow();
-        auth.Show();
-        desktop.MainWindow = auth;
-        Close();
+            // Декоративные иконки в узком сайдбаре дублируют действия
+            BtnSettingsIcon.Click += OnSettingsClick;
+            BtnLogoutIcon.Click += OnLogoutClick;
+
+            // По умолчанию открываем журнал
+            ShowJournal();
+        }
+
+        // Подсветка активной кнопки раздела через CSS-класс "active"
+        private void SetActiveSection(Button btn)
+        {
+            if (_activeSectionButton != null)
+                _activeSectionButton.Classes.Remove("active");
+
+            _activeSectionButton = btn;
+
+            if (_activeSectionButton != null && !_activeSectionButton.Classes.Contains("active"))
+                _activeSectionButton.Classes.Add("active");
+        }
+
+        // Методы для переключения разделов.
+        // Контрол создаётся при первом обращении (lazy initialization).
+
+        private void ShowJournal()
+        {
+            if (_journal == null)
+                _journal = new Journal();
+            MainContent.Content = _journal;
+            SetActiveSection(BtnJournal);
+        }
+
+        private void ShowSessionReport()
+        {
+            if (_sessionReport == null)
+                _sessionReport = new SessionReport();
+            MainContent.Content = _sessionReport;
+            SetActiveSection(BtnSessionReport);
+        }
+
+        private void ShowReports()
+        {
+            if (_reports == null)
+                _reports = new Reports();
+            MainContent.Content = _reports;
+            SetActiveSection(BtnReports);
+        }
+
+        private void ShowPlanSession()
+        {
+            if (_planSession == null)
+                _planSession = new PlanSession();
+            MainContent.Content = _planSession;
+            SetActiveSection(BtnPlanSession);
+        }
+
+        private void ShowStudents()
+        {
+            if (_students == null)
+                _students = new Students();
+            MainContent.Content = _students;
+            SetActiveSection(BtnStudents);
+        }
+
+        private void ShowTeachers()
+        {
+            if (_teachers == null)
+                _teachers = new Teachers();
+            MainContent.Content = _teachers;
+            SetActiveSection(BtnTeachers);
+        }
+
+        // Открывает окно настроек подключения к БД
+        private async void OnSettingsClick(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new SettingsWindow();
+            await settingsWindow.ShowDialog(this);
+        }
+
+        // Выход — закрываем главное окно и возвращаемся к авторизации
+        private void OnLogoutClick(object sender, RoutedEventArgs e)
+        {
+            var authWindow = new AuthWindow();
+            authWindow.Show();
+
+            if (Avalonia.Application.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                desktop.MainWindow = authWindow;
+
+            this.Close();
+        }
     }
 }

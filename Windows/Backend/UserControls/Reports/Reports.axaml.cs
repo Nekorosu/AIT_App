@@ -1,393 +1,322 @@
+using System;
+using System.Collections.Generic;
 using System.Data;
-using AIT_App.Services;
 using Avalonia.Controls;
-using Avalonia.Data;
 using Avalonia.Platform.Storage;
+using AIT_App.Services;
 
-namespace AIT_App;
-
-// ТЕСТИРОВЩИК: отчёты — фильтры специальность/группа/тип, пять вкладок, счётчики, один xlsx с 5 листами.
-public partial class Reports : UserControl
+namespace AIT_App
 {
-    private readonly DataBaseCon _db = new();
-
-    private DataTable? _dtExcellent;
-    private DataTable? _dtGood;
-    private DataTable? _dtThree;
-    private DataTable? _dtDebt;
-    private DataTable? _dtRed;
-
-    private sealed record SpecItem(string Code, string Name)
+    // Раздел "Дополнительные отчёты".
+    // Строит пять категорий студентов на основе их оценок:
+    //   Отличники, Хорошисты, Троечники, Должники, Кандидаты на красный диплом.
+    public partial class Reports : UserControl
     {
-        public override string ToString() => Name;
-    }
+        private DataBaseCon _db = new DataBaseCon();
 
-    public Reports()
-    {
-        InitializeComponent();
-        TypeCombo.ItemsSource = new[] { "Все", "Текущая", "Экзаменационная" };
-        TypeCombo.SelectedIndex = 0;
+        // Сохраняем таблицы для экспорта в Excel
+        private DataTable _tExcellent, _tGood, _tThree, _tDebt, _tRed;
 
-        Loaded += async (_, _) => await InitAsync();
-        SpecialityCombo.SelectionChanged += async (_, _) => await OnSpecialityChangedAsync();
-        BtnBuild.Click += async (_, _) => await BuildAsync();
-        BtnExport.Click += async (_, _) => await ExportAsync();
-    }
-
-    private async Task InitAsync()
-    {
-        const string sql =
-            """
-            SELECT `Код специальности`, `Название`
-            FROM `Специальности`
-            ORDER BY `Название`
-            """;
-        var table = await _db.ExecuteQueryAsync(sql);
-        var items = new List<SpecItem> { new("", "Все специальности") };
-        if (table != null)
+        public Reports()
         {
-            foreach (DataRow row in table.Rows)
+            InitializeComponent();
+
+            TypeCombo.ItemsSource = new[] { "Все", "Текущая", "Экзаменационная" };
+            TypeCombo.SelectedIndex = 0;
+
+            // При смене специальности обновляем список групп
+            SpecialityCombo.SelectionChanged += (s, e) => LoadGroups();
+
+            BtnBuild.Click += (s, e) => BuildReports();
+            BtnExport.Click += OnExportClick;
+
+            // Загружаем специальности при открытии
+            LoadSpecialities();
+        }
+
+        private void LoadSpecialities()
+        {
+            string sql = "SELECT `Код специальности`, `Название` FROM `Специальности` ORDER BY `Название`";
+            var table = _db.ExecuteQuery(sql);
+
+            // Первый элемент — "Все специальности"
+            var items = new List<string> { "Все специальности" };
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    items.Add(row["Название"].ToString());
+
+            SpecialityCombo.ItemsSource = items;
+            SpecialityCombo.SelectedIndex = 0;
+        }
+
+        // Загружает группы для выбранной специальности
+        private void LoadGroups()
+        {
+            string selectedSpec = SpecialityCombo.SelectedItem as string;
+            string sql;
+            Dictionary<string, object> parameters = null;
+
+            if (string.IsNullOrEmpty(selectedSpec) || selectedSpec == "Все специальности")
             {
-                var code = row["Код специальности"]?.ToString() ?? "";
-                var name = row["Название"]?.ToString() ?? "";
-                items.Add(new SpecItem(code, string.IsNullOrWhiteSpace(name) ? code : name));
+                // Загружаем все группы
+                sql = "SELECT `Название группы` FROM `Группы` ORDER BY `Название группы`";
             }
-        }
-        else
-        {
-            await Dialogs.ErrorAsync("Отчёты",
-                "Не удалось загрузить специальности: " + (_db.LastError ?? "ошибка БД"));
-        }
+            else
+            {
+                // Загружаем только группы выбранной специальности
+                sql = @"
+                    SELECT г.`Название группы`
+                    FROM `Группы` г
+                    INNER JOIN `Специальности` с ON г.`Специальность` = с.`Код специальности`
+                    WHERE с.`Название` = @spec
+                    ORDER BY г.`Название группы`";
+                parameters = new Dictionary<string, object> { { "spec", selectedSpec } };
+            }
 
-        SpecialityCombo.ItemsSource = items;
-        SpecialityCombo.SelectedIndex = 0;
-        await OnSpecialityChangedAsync();
-    }
+            var table = _db.ExecuteQuery(sql, parameters);
+            var groups = new List<string> { "Все группы" };
+            if (table != null)
+                foreach (DataRow row in table.Rows)
+                    groups.Add(row["Название группы"].ToString());
 
-    private async Task OnSpecialityChangedAsync()
-    {
-        GroupCombo.ItemsSource = null;
-        GroupCombo.SelectedItem = null;
-        GroupCombo.IsEnabled = false;
-
-        if (SpecialityCombo.SelectedItem is not SpecItem spec || string.IsNullOrWhiteSpace(spec.Code))
-        {
-            GroupCombo.IsEnabled = true;
-            GroupCombo.ItemsSource = await LoadAllGroupsAsync();
+            GroupCombo.ItemsSource = groups;
             GroupCombo.SelectedIndex = 0;
-            return;
         }
 
-        const string sql =
-            """
-            SELECT `Название группы`
-            FROM `Группы`
-            WHERE `Специальность` = @c
-            ORDER BY `Название группы`
-            """;
-        var table = await _db.ExecuteQueryAsync(sql, new Dictionary<string, object?> { ["c"] = spec.Code });
-        var groups = new List<string> { "Все группы" };
-        if (table != null)
+        // Строит все пять отчётов
+        private void BuildReports()
         {
-            foreach (DataRow row in table.Rows)
+            string group = GroupCombo.SelectedItem as string ?? "Все группы";
+            string type = TypeCombo.SelectedItem as string ?? "Все";
+
+            // Загружаем все оценки с учётом фильтров
+            string sql = @"
+                SELECT
+                    u.`ID` AS StudentID,
+                    u.`ФИО`,
+                    г.`Название группы` AS Группа,
+                    с.`Название` AS Специальность,
+                    a.`Предмет`,
+                    a.`Оценка`
+                FROM `Аттестация` a
+                INNER JOIN `Ученики` u ON a.`Номер студента` = u.`ID`
+                INNER JOIN `Группы` г ON u.`Группа` = г.`Название группы`
+                INNER JOIN `Специальности` с ON г.`Специальность` = с.`Код специальности`"
+                + (group != "Все группы" ? " WHERE г.`Название группы` = @group" : "")
+                + (type != "Все"
+                    ? (group != "Все группы" ? " AND" : " WHERE") + " a.`Тип` = @type"
+                    : "");
+
+            var parameters = new Dictionary<string, object>();
+            if (group != "Все группы") parameters.Add("group", group);
+            if (type != "Все") parameters.Add("type", type);
+
+            var flat = _db.ExecuteQuery(sql, parameters);
+            if (flat == null)
             {
-                var g = row["Название группы"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(g))
-                    groups.Add(g!);
+                _ = Dialogs.ErrorAsync("Отчёты", "Не удалось загрузить данные.");
+                return;
             }
-        }
 
-        GroupCombo.ItemsSource = groups;
-        GroupCombo.SelectedIndex = 0;
-        GroupCombo.IsEnabled = true;
-    }
+            // Группируем оценки по студентам
+            var students = GroupByStudent(flat);
 
-    private async Task<List<string>> LoadAllGroupsAsync()
-    {
-        const string sql = "SELECT `Название группы` FROM `Группы` ORDER BY `Название группы`";
-        var table = await _db.ExecuteQueryAsync(sql);
-        var groups = new List<string> { "Все группы" };
-        if (table != null)
-        {
-            foreach (DataRow row in table.Rows)
+            // Строим таблицы для каждой категории
+            _tExcellent = new DataTable();
+            _tGood = new DataTable();
+            _tThree = new DataTable();
+            _tRed = new DataTable();
+
+            // Должники получают дополнительные колонки
+            _tDebt = new DataTable();
+
+            AddBaseColumns(_tExcellent);
+            AddBaseColumns(_tGood);
+            AddBaseColumns(_tThree);
+            AddBaseColumns(_tRed);
+            _tRed.Columns.Add("СреднийБалл", typeof(double)).Caption = "Средний балл";
+
+            AddBaseColumns(_tDebt);
+            _tDebt.Columns.Add("КоличествоДвоек", typeof(int)).Caption = "Кол-во «2»";
+            _tDebt.Columns.Add("КоличествоН", typeof(int)).Caption = "Кол-во «Н»";
+            _tDebt.Columns.Add("Предметы", typeof(string));
+
+            foreach (var student in students.Values)
             {
-                var g = row["Название группы"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(g))
-                    groups.Add(g!);
-            }
-        }
+                var grades = student.Grades;
+                if (grades.Count == 0) continue;
 
-        return groups;
-    }
+                bool hasTwo = grades.Contains("2");
+                bool hasN = grades.Contains("Н");
+                bool hasThree = grades.Contains("3");
+                bool hasFour = grades.Contains("4");
+                bool hasFive = grades.Contains("5");
 
-    private async Task BuildAsync()
-    {
-        var spec = SpecialityCombo.SelectedItem as SpecItem;
-        var groupItem = GroupCombo.SelectedItem as string;
-        var typeItem = TypeCombo.SelectedItem as string ?? "Все";
+                // Отличники: все оценки 5
+                if (!hasTwo && !hasN && !hasThree && !hasFour)
+                    AddBaseRow(_tExcellent, student);
 
-        var allSpec = spec is null || string.IsNullOrWhiteSpace(spec.Code) ? 1 : 0;
-        var allGroup = string.IsNullOrWhiteSpace(groupItem) || groupItem == "Все группы" ? 1 : 0;
-        var allType = typeItem == "Все" ? 1 : 0;
+                // Хорошисты: только 4 и 5, есть хотя бы одна 4
+                if (!hasTwo && !hasN && !hasThree && hasFour)
+                    AddBaseRow(_tGood, student);
 
-        const string sql =
-            """
-            SELECT
-              u.`ID` AS `ID студента`,
-              u.`ФИО` AS `ФИО`,
-              g.`Название группы` AS `Группа`,
-              s.`Название` AS `Специальность`,
-              s.`Код специальности` AS `Код специальности`,
-              d.`Название` AS `Предмет`,
-              o.`Значение поля` AS `Оценка`,
-              a.`Тип` AS `Тип`
-            FROM `Аттестация` a
-            INNER JOIN `Ученики` u ON a.`Номер студента` = u.`ID`
-            INNER JOIN `Группы` g ON u.`Группа` = g.`Название группы`
-            INNER JOIN `Специальности` s ON g.`Код специальности` = s.`Код специальности`
-            INNER JOIN `Дисциплины` d ON a.`Предмет` = d.`Название`
-            INNER JOIN `Оценки` o ON a.`Оценка` = o.`Значение поля`
-            WHERE (@allSpec = 1 OR s.`Код специальности` = @specCode)
-              AND (@allGroup = 1 OR g.`Название группы` = @groupName)
-              AND (@allType = 1 OR a.`Тип` = @gradeType)
-            """;
+                // Троечники: есть 3, нет 2 и Н
+                if (hasThree && !hasTwo && !hasN)
+                    AddBaseRow(_tThree, student);
 
-        var table = await _db.ExecuteQueryAsync(sql, new Dictionary<string, object?>
-        {
-            ["allSpec"] = allSpec,
-            ["specCode"] = spec?.Code ?? (object)DBNull.Value,
-            ["allGroup"] = allGroup,
-            ["groupName"] = allGroup == 1 ? (object)DBNull.Value : groupItem!,
-            ["allType"] = allType,
-            ["gradeType"] = allType == 1 ? (object)DBNull.Value : typeItem
-        });
-
-        if (table == null)
-        {
-            await Dialogs.ErrorAsync("Отчёты",
-                "Не удалось загрузить данные: " + (_db.LastError ?? "ошибка БД"));
-            return;
-        }
-
-        BuildTables(table,
-            out var tEx,
-            out var tGood,
-            out var tThree,
-            out var tDebt,
-            out var tRed);
-
-        _dtExcellent = tEx;
-        _dtGood = tGood;
-        _dtThree = tThree;
-        _dtDebt = tDebt;
-        _dtRed = tRed;
-
-        Bind(GridExcellent, CntExcellent, tEx);
-        Bind(GridGood, CntGood, tGood);
-        Bind(GridThree, CntThree, tThree);
-        Bind(GridDebt, CntDebt, tDebt);
-        Bind(GridRed, CntRed, tRed);
-    }
-
-    private static void Bind(DataGrid grid, TextBlock label, DataTable t)
-    {
-        ConfigureGridColumns(grid, t);
-        grid.ItemsSource = t.DefaultView;
-        label.Text = $"Записей: {t.Rows.Count}";
-    }
-
-    private static void ConfigureGridColumns(DataGrid grid, DataTable table)
-    {
-        grid.Columns.Clear();
-        foreach (DataColumn col in table.Columns)
-        {
-            grid.Columns.Add(new DataGridTextColumn
-            {
-                Header = col.ColumnName,
-                Binding = new Binding
+                // Должники: есть 2 или Н
+                if (hasTwo || hasN)
                 {
-                    Path = ".",
-                    Converter = DataRowColumnValueConverter.Instance,
-                    ConverterParameter = col.ColumnName
-                }
-            });
-        }
-    }
-
-    private static void BuildTables(
-        DataTable flat,
-        out DataTable excellent,
-        out DataTable good,
-        out DataTable three,
-        out DataTable debt,
-        out DataTable red)
-    {
-        var byStudent = new Dictionary<int, StudentGrades>();
-
-        foreach (DataRow row in flat.Rows)
-        {
-            var id = Convert.ToInt32(row["ID студента"]);
-            if (!byStudent.TryGetValue(id, out var sg))
-            {
-                sg = new StudentGrades(
-                    id,
-                    row["ФИО"]?.ToString() ?? "",
-                    row["Группа"]?.ToString() ?? "",
-                    row["Специальность"]?.ToString() ?? "");
-                byStudent[id] = sg;
-            }
-
-            sg.Grades.Add(row["Оценка"]?.ToString() ?? "");
-            sg.SubjectGrades.Add((row["Предмет"]?.ToString() ?? "", row["Оценка"]?.ToString() ?? ""));
-        }
-
-        excellent = CreateTable("ФИО", "Группа", "Специальность");
-        good = CreateTable("ФИО", "Группа", "Специальность");
-        three = CreateTable("ФИО", "Группа", "Специальность");
-        debt = new DataTable();
-        debt.Columns.Add("ФИО", typeof(string));
-        debt.Columns.Add("Группа", typeof(string));
-        debt.Columns.Add("Специальность", typeof(string));
-        debt.Columns.Add("Количество «2»", typeof(int));
-        debt.Columns.Add("Количество «Н»", typeof(int));
-        debt.Columns.Add("Предметы (2 и Н)", typeof(string));
-        red = new DataTable();
-        red.Columns.Add("ФИО", typeof(string));
-        red.Columns.Add("Группа", typeof(string));
-        red.Columns.Add("Специальность", typeof(string));
-        red.Columns.Add("Средний балл", typeof(double));
-
-        foreach (var sg in byStudent.Values)
-        {
-            var grades = sg.Grades;
-            if (grades.Count == 0)
-                continue;
-
-            if (grades.All(g => g == "5"))
-                AddRow(excellent, sg);
-
-            if (grades.All(g => g is "4" or "5") && grades.Any(g => g == "4"))
-                AddRow(good, sg);
-
-            if (grades.Any(g => g == "3") && grades.All(g => g is not "2" and not "Н"))
-                AddRow(three, sg);
-
-            if (grades.Any(g => g is "2" or "Н"))
-            {
-                var c2 = grades.Count(g => g == "2");
-                var cn = grades.Count(g => g == "Н");
-                var badSubjects = sg.SubjectGrades
-                    .Where(p => p.Grade is "2" or "Н")
-                    .Select(p => p.Subject)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase);
-                var r = debt.NewRow();
-                r["ФИО"] = sg.Fio;
-                r["Группа"] = sg.Group;
-                r["Специальность"] = sg.Spec;
-                r["Количество «2»"] = c2;
-                r["Количество «Н»"] = cn;
-                r["Предметы (2 и Н)"] = string.Join(", ", badSubjects);
-                debt.Rows.Add(r);
-            }
-
-            if (!grades.Any(g => g is "3" or "2" or "Н"))
-            {
-                var nums = grades.Select(Parse).Where(v => v.HasValue).Select(v => v!.Value).ToList();
-                if (nums.Count > 0)
-                {
-                    var avg = nums.Average();
-                    if (avg >= 4.5d)
+                    int count2 = 0, countN = 0;
+                    var debtSubjects = new List<string>();
+                    foreach (var sg in student.SubjectGrades)
                     {
-                        var rr = red.NewRow();
-                        rr["ФИО"] = sg.Fio;
-                        rr["Группа"] = sg.Group;
-                        rr["Специальность"] = sg.Spec;
-                        rr["Средний балл"] = Math.Round(avg, 2);
-                        red.Rows.Add(rr);
+                        if (sg.Value == "2") { count2++; if (!debtSubjects.Contains(sg.Key)) debtSubjects.Add(sg.Key); }
+                        if (sg.Value == "Н") { countN++; if (!debtSubjects.Contains(sg.Key)) debtSubjects.Add(sg.Key); }
+                    }
+                    debtSubjects.Sort();
+                    var row = _tDebt.NewRow();
+                    row["ФИО"] = student.Fio;
+                    row["Группа"] = student.Group;
+                    row["Специальность"] = student.Spec;
+                    row["КоличествоДвоек"] = count2;
+                    row["КоличествоН"] = countN;
+                    row["Предметы"] = string.Join(", ", debtSubjects);
+                    _tDebt.Rows.Add(row);
+                }
+
+                // Красный диплом: нет 3, 2, Н и средний балл >= 4.5
+                if (!hasThree && !hasTwo && !hasN)
+                {
+                    double avg = CalculateAverage(grades);
+                    if (avg >= 4.5)
+                    {
+                        var row = _tRed.NewRow();
+                        row["ФИО"] = student.Fio;
+                        row["Группа"] = student.Group;
+                        row["Специальность"] = student.Spec;
+                        row["СреднийБалл"] = Math.Round(avg, 2);
+                        _tRed.Rows.Add(row);
                     }
                 }
             }
-        }
-    }
 
-    private sealed class StudentGrades
-    {
-        public StudentGrades(int id, string fio, string group, string spec)
-        {
-            Id = id;
-            Fio = fio;
-            Group = group;
-            Spec = spec;
-        }
+            // Отображаем результаты в таблицах
+            GridExcellent.ItemsSource = DataBaseCon.ToRowList(_tExcellent);
+            GridGood.ItemsSource = DataBaseCon.ToRowList(_tGood);
+            GridThree.ItemsSource = DataBaseCon.ToRowList(_tThree);
+            GridDebt.ItemsSource = DataBaseCon.ToRowList(_tDebt);
+            GridRed.ItemsSource = DataBaseCon.ToRowList(_tRed);
 
-        public int Id { get; }
-        public string Fio { get; }
-        public string Group { get; }
-        public string Spec { get; }
-        public List<string> Grades { get; } = [];
-        public List<(string Subject, string Grade)> SubjectGrades { get; } = [];
-    }
-
-    private static DataTable CreateTable(params string[] cols)
-    {
-        var t = new DataTable();
-        foreach (var c in cols)
-            t.Columns.Add(c);
-        return t;
-    }
-
-    private static void AddRow(DataTable t, StudentGrades sg)
-    {
-        var r = t.NewRow();
-        r["ФИО"] = sg.Fio;
-        r["Группа"] = sg.Group;
-        r["Специальность"] = sg.Spec;
-        t.Rows.Add(r);
-    }
-
-    private static int? Parse(string g) => g switch
-    {
-        "2" => 2,
-        "3" => 3,
-        "4" => 4,
-        "5" => 5,
-        _ => null
-    };
-
-    private async Task ExportAsync()
-    {
-        if (_dtExcellent == null || _dtGood == null || _dtThree == null || _dtDebt == null || _dtRed == null)
-        {
-            await Dialogs.InfoAsync("Экспорт", "Сначала постройте отчёт.");
-            return;
+            // Обновляем счётчики записей
+            CntExcellent.Text = $"Найдено: {_tExcellent.Rows.Count}";
+            CntGood.Text = $"Найдено: {_tGood.Rows.Count}";
+            CntThree.Text = $"Найдено: {_tThree.Rows.Count}";
+            CntDebt.Text = $"Найдено: {_tDebt.Rows.Count}";
+            CntRed.Text = $"Найдено: {_tRed.Rows.Count}";
         }
 
-        var top = TopLevel.GetTopLevel(this);
-        if (top is null)
-            return;
-
-        var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        // Группирует строки плоской таблицы по ID студента
+        private Dictionary<int, StudentData> GroupByStudent(DataTable flat)
         {
-            Title = "Экспорт отчётов",
-            DefaultExtension = "xlsx",
-            FileTypeChoices = [new FilePickerFileType("Excel") { Patterns = ["*.xlsx"] }]
-        });
+            var result = new Dictionary<int, StudentData>();
 
-        var path = file?.TryGetLocalPath();
-        if (string.IsNullOrWhiteSpace(path))
-            return;
+            foreach (DataRow row in flat.Rows)
+            {
+                int id = Convert.ToInt32(row["StudentID"]);
+                if (!result.ContainsKey(id))
+                {
+                    result[id] = new StudentData
+                    {
+                        Fio = row["ФИО"].ToString(),
+                        Group = row["Группа"].ToString(),
+                        Spec = row["Специальность"].ToString()
+                    };
+                }
 
-        var sheets = new Dictionary<string, DataTable>(StringComparer.OrdinalIgnoreCase)
+                result[id].Grades.Add(row["Оценка"].ToString());
+                result[id].SubjectGrades.Add(new KeyValuePair<string, string>(
+                    row["Предмет"].ToString(), row["Оценка"].ToString()));
+            }
+
+            return result;
+        }
+
+        // Считает средний балл (Н не учитывается, 2 = 0 для среднего)
+        private double CalculateAverage(List<string> grades)
         {
-            ["Отличники"] = _dtExcellent,
-            ["Хорошисты"] = _dtGood,
-            ["Троечники"] = _dtThree,
-            ["Должники"] = _dtDebt,
-            ["Красный диплом"] = _dtRed
-        };
+            double sum = 0;
+            int count = 0;
+            foreach (string g in grades)
+            {
+                if (g == "5") { sum += 5; count++; }
+                else if (g == "4") { sum += 4; count++; }
+                else if (g == "3") { sum += 3; count++; }
+                else if (g == "2") { sum += 2; count++; }
+            }
+            return count > 0 ? sum / count : 0;
+        }
 
-        await Task.Run(() => ExportService.ExportReports(sheets, path));
-        await Dialogs.InfoAsync("Экспорт", "Файл с 5 листами сохранён.");
+        // Добавляет базовые колонки ФИО/Группа/Специальность в таблицу
+        private void AddBaseColumns(DataTable table)
+        {
+            table.Columns.Add("ФИО", typeof(string));
+            table.Columns.Add("Группа", typeof(string));
+            table.Columns.Add("Специальность", typeof(string));
+        }
+
+        // Добавляет строку с данными студента в таблицу
+        private void AddBaseRow(DataTable table, StudentData student)
+        {
+            var row = table.NewRow();
+            row["ФИО"] = student.Fio;
+            row["Группа"] = student.Group;
+            row["Специальность"] = student.Spec;
+            table.Rows.Add(row);
+        }
+
+        private async void OnExportClick(object sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (_tExcellent == null)
+            {
+                await Dialogs.InfoAsync("Экспорт", "Сначала постройте отчёт.");
+                return;
+            }
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Сохранить отчёты",
+                DefaultExtension = "xlsx",
+                FileTypeChoices = new[] { new FilePickerFileType("Excel") { Patterns = new[] { "*.xlsx" } } }
+            });
+
+            string path = file?.TryGetLocalPath();
+            if (string.IsNullOrEmpty(path)) return;
+
+            var sheets = new Dictionary<string, DataTable>
+            {
+                { "Отличники", _tExcellent },
+                { "Хорошисты", _tGood },
+                { "Троечники", _tThree },
+                { "Должники", _tDebt },
+                { "Красный диплом", _tRed }
+            };
+
+            ExportService.ExportReports(sheets, path);
+            await Dialogs.InfoAsync("Экспорт", "Файл с 5 листами сохранён.");
+        }
+
+        // Вспомогательный класс для хранения данных одного студента
+        private class StudentData
+        {
+            public string Fio { get; set; }
+            public string Group { get; set; }
+            public string Spec { get; set; }
+            public List<string> Grades { get; set; } = new List<string>();
+            public List<KeyValuePair<string, string>> SubjectGrades { get; set; } = new List<KeyValuePair<string, string>>();
+        }
     }
 }

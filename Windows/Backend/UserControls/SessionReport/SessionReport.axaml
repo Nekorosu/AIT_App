@@ -1,88 +1,124 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="AIT_App.SessionReport">
-    <!-- ДИЗАЙНЕР: два грида + панель правки выделенной оценки;
-         разметка рядом с SessionReport.axaml.cs (Avalonia). -->
-    <Grid RowDefinitions="Auto,Auto,*,Auto,*" RowSpacing="10" Margin="0,0,0,8">
-        <!-- Row 0: фильтры -->
-        <Border Grid.Row="0" Padding="12" CornerRadius="8" Background="White">
-            <Grid ColumnDefinitions="*,*,*,*,Auto" ColumnSpacing="8" RowDefinitions="Auto">
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Группа" />
-                    <ComboBox x:Name="GroupCombo" PlaceholderText="Группа" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Дата с" />
-                    <CalendarDatePicker x:Name="DateFromPicker" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Spacing="4">
-                    <TextBlock Text="Дата по" />
-                    <CalendarDatePicker x:Name="DateToPicker" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" VerticalAlignment="Bottom">
-                    <TextBlock Text="" />
-                </StackPanel>
-                <Button x:Name="BtnShow"
-                        Grid.Column="4"
-                        VerticalAlignment="Bottom"
-                        Content="Показать отчёт" />
-            </Grid>
-        </Border>
+             x:Class="AIT_App.SessionReport"
+             x:CompileBindings="False">
 
-        <!-- Row 1: панель редактирования выделенной оценки -->
-        <Border x:Name="EditPanel"
-                Grid.Row="1"
-                Padding="12"
-                CornerRadius="8"
-                Background="#e6f4ff"
-                IsVisible="False">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                <TextBlock x:Name="EditPanelStatus"
+    <Grid RowDefinitions="Auto,Auto,*,Auto,*" RowSpacing="14">
+
+        <!-- ===== Строка 0: верхняя панель ===== -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="Отчёт по сессии" Classes="h1"/>
+                <TextBlock Text="Экзаменационные оценки и успеваемость по предметам"
+                           Classes="muted"/>
+            </StackPanel>
+
+            <Button Grid.Column="1" x:Name="BtnExport" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Path Stretch="Uniform" Width="14" Height="14"
+                          Stroke="{Binding $parent[Button].Foreground}"
+                          StrokeThickness="2" Fill="Transparent"
+                          StrokeJoin="Round" StrokeLineCap="Round"
+                          Data="M12 3v12 M7 10l5 5 5-5 M5 21h14"
+                          VerticalAlignment="Center"/>
+                    <TextBlock Text="Экспорт" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- ===== Строка 1: фильтры ===== -->
+        <Border Grid.Row="1" Classes="card" Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
+
+                <TextBlock Grid.Column="0" Text="Группа"
                            VerticalAlignment="Center"
-                           TextWrapping="Wrap"
-                           Text="Кликните по ячейке с оценкой, чтобы изменить или удалить её." />
-                <ComboBox x:Name="EditGradeCombo"
-                          Grid.Column="1"
-                          Width="80"
-                          VerticalAlignment="Center"
-                          PlaceholderText="Оценка" />
-                <Button x:Name="BtnSaveEdit"
-                        Grid.Column="2"
-                        VerticalAlignment="Center"
-                        Content="Изменить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnDeleteSelected"
-                        Grid.Column="3"
-                        VerticalAlignment="Center"
-                        Content="Удалить"
-                        IsEnabled="False" />
-                <Button x:Name="BtnCancelSelection"
-                        Grid.Column="4"
-                        VerticalAlignment="Center"
-                        Content="Отмена" />
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="0,0,10,0"/>
+                <ComboBox Grid.Column="1" x:Name="GroupCombo"
+                          PlaceholderText="Выберите группу"
+                          HorizontalAlignment="Stretch"
+                          MaxWidth="220"/>
+
+                <TextBlock Grid.Column="2" Text="Дата с"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="20,0,10,0"/>
+                <CalendarDatePicker Grid.Column="3" x:Name="DateFromPicker"
+                                    Width="160"/>
+
+                <TextBlock Grid.Column="4" Text="по"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource FgSecondaryBrush}"
+                           Margin="14,0,10,0"/>
+                <CalendarDatePicker Grid.Column="5" x:Name="DateToPicker"
+                                    Width="160"/>
+
+                <Button Grid.Column="6" x:Name="BtnShow"
+                        Classes="primary"
+                        Content="Построить"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <!-- Row 2: pivot оценок -->
-        <DataGrid x:Name="GradesGrid"
-                  Grid.Row="2"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  GridLinesVisibility="All"
-                  HeadersVisibility="Column" />
+        <!-- ===== Строка 2: pivot-таблица оценок ===== -->
+        <Border Grid.Row="2" Classes="card" Padding="0">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" Padding="16,12"
+                        BorderBrush="{StaticResource BorderLightBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Оценки студентов"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource FgPrimaryBrush}"
+                                   FontSize="14"/>
+                        <TextBlock Text="Строки — студенты, столбцы — предметы"
+                                   FontSize="12"
+                                   Foreground="{StaticResource FgSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
 
-        <!-- Row 3: заголовок + экспорт -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Успеваемость по предметам" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <Button x:Name="BtnExport" Content="Экспорт в Excel" />
-        </StackPanel>
+                <DataGrid x:Name="GradesGrid" Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Margin="4"/>
+            </Grid>
+        </Border>
 
-        <!-- Row 4: грид успеваемости -->
-        <DataGrid x:Name="PerfGrid"
-                  Grid.Row="4"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  GridLinesVisibility="All"
-                  HeadersVisibility="Column" />
+        <!-- ===== Строка 3: разделитель пустой (gap уже от RowSpacing) ===== -->
+        <Panel Grid.Row="3" Height="0"/>
+
+        <!-- ===== Строка 4: таблица успеваемости ===== -->
+        <Border Grid.Row="4" Classes="card" Padding="0">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" Padding="16,12"
+                        BorderBrush="{StaticResource BorderLightBrush}"
+                        BorderThickness="0,0,0,1">
+                    <TextBlock Text="Успеваемость по предметам"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource FgPrimaryBrush}"
+                               FontSize="14"/>
+                </Border>
+
+                <DataGrid x:Name="PerfGrid" Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          Margin="4"  >
+                    <DataGrid.Columns>
+    <DataGridTextColumn Header="Предмет"
+                        Binding="{Binding [Предмет]}" Width="*"/>
+    <DataGridTextColumn Header="Средний балл"
+                        Binding="{Binding [СреднийБалл]}" Width="*"/>
+    <DataGridTextColumn Header="Качество % (4 и 5)"
+                        Binding="{Binding [КачествоПроц]}" Width="*"/>
+    <DataGridTextColumn Header="Успеваемость % (3, 4, 5)"
+                        Binding="{Binding [УспеваемостьПроц]}" Width="*"/>
+    <DataGridTextColumn Header="Всего оценок"
+                        Binding="{Binding [ВсегоОценок]}" Width="*"/>
+</DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
     </Grid>
 </UserControl>
