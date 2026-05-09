@@ -113,11 +113,6 @@ namespace AIT_App
                 });
             }
 
-            if (result <= 0 && result != -1)
-            {
-                // -1 = ошибка, но если >= 0 продолжаем
-            }
-
             if (result < 0)
             {
                 if (result == -2)
