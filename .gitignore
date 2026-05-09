@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Local configuration with credentials - never commit
+config.json
+
 # User-specific files
 *.rsuser
 *.suo
