@@ -242,7 +242,7 @@ namespace AIT_App
             return result;
         }
 
-        // Считает средний балл (Н не учитывается, 2 = 0 для среднего)
+        // Считает средний балл (Н не учитывается, 2 засчитывается как 2)
         private double CalculateAverage(List<string> grades)
         {
             double sum = 0;
