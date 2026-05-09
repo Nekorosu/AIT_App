@@ -25,9 +25,6 @@ namespace AIT_App
             BtnEdit.Click += (s, e) => StartEdit();
             BtnDelete.Click += (s, e) => DeleteStudent();
 
-            // При выборе строки в таблице — подсвечиваем что можно редактировать
-            StudentsGrid.SelectionChanged += (s, e) => OnSelectionChanged();
-
             LoadGroups();
             LoadStudents();
         }
@@ -58,12 +55,6 @@ namespace AIT_App
 
             var table = _db.ExecuteQuery(sql);
             StudentsGrid.ItemsSource = DataBaseCon.ToRowList(table);
-        }
-
-        // Срабатывает при выборе строки в таблице
-        private void OnSelectionChanged()
-        {
-            // Просто проверяем что что-то выбрано — кнопки всегда активны
         }
 
         // Переходит в режим редактирования выбранного студента
