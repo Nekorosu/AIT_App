@@ -123,24 +123,32 @@ namespace AIT_App
                 return;
             }
 
-            // Проверяем логин и пароль в БД, получаем роль пользователя
-            string sql = "SELECT `Роль` FROM `Данные_авторизации` WHERE `Логин`=@login AND `Пароль`=@password LIMIT 1";
-            var result = _db.ExecuteScalar(sql, new Dictionary<string, object>
-            {
-                { "login", login },
-                { "password", password }
-            });
+            // Получаем хеш и роль по логину; пароль проверяется через BCrypt — не передаём его в SQL
+            string sql = "SELECT `Роль`, `Пароль` FROM `Данные_авторизации` WHERE `Логин`=@login LIMIT 1";
+            var table = _db.ExecuteQuery(sql, new Dictionary<string, object> { { "login", login } });
 
-            if (result == null)
+            if (table == null || table.Rows.Count == 0)
             {
-                // Пользователь с таким логином/паролем не найден
+                await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
+                PasswordInput.Text = "";
+                return;
+            }
+
+            var row = table.Rows[0];
+            string storedHash = row["Пароль"]?.ToString() ?? "";
+
+            // BCrypt.Verify — сравнение занимает фиксированное время, что защищает от timing-атак
+            bool passwordValid = BCrypt.Net.BCrypt.Verify(password, storedHash);
+
+            if (!passwordValid)
+            {
                 await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
                 PasswordInput.Text = "";
                 return;
             }
 
             // Преобразуем роль из БД в число
-            int role = Convert.ToInt32(result);
+            int role = Convert.ToInt32(row["Роль"]);
 
             // Открываем главное окно, передаём логин и роль
             var homeWindow = new HomeWindow(login, role);
