@@ -409,9 +409,9 @@ namespace AIT_App
 
             int result = _db.ExecuteNonQuery(sql, new Dictionary<string, object>
             {
-                { "@studentId", studentId },
-                { "@subject", subject },
-                { "@date", date }
+                { "studentId", studentId },
+                { "subject", subject },
+                { "date", date }
             });
 
             if (result > 0)

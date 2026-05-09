@@ -64,7 +64,7 @@ namespace AIT_App
                 // Соединение не удалось — показываем ошибку
                 ConnectionStatusText.Text = "Нет соединения: " + error;
                 ConnectionIcon.IsVisible = true;
-                ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/check.png")));
+                ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/exclamation.png")));
                 LoginButton.IsEnabled = false;
             }
         }
