@@ -15,11 +15,11 @@ ALTER TABLE `Данные_авторизации`
     MODIFY COLUMN `Пароль` VARCHAR(72) NOT NULL;
 
 UPDATE `Данные_авторизации`
-    SET `Пароль` = '$2y$12$h358GBMP/hdFvSQ9kFenke0dn9CKt7VvNIbNUhhXlMKIHwUPXU4eq'
+    SET `Пароль` = '$2b$12$h358GBMP/hdFvSQ9kFenke0dn9CKt7VvNIbNUhhXlMKIHwUPXU4eq'
     WHERE `Логин` = 'teacher';
 
 UPDATE `Данные_авторизации`
-    SET `Пароль` = '$2y$12$h914qY5LyhDF1JJouNKibu.nvRqOgI6QSqY5nrjwVhDGnlS0stTke'
+    SET `Пароль` = '$2b$12$h914qY5LyhDF1JJouNKibu.nvRqOgI6QSqY5nrjwVhDGnlS0stTke'
     WHERE `Логин` = 'admin';
 
 -- ВНИМАНИЕ: для остальных учётных записей (если они есть) нужно вручную

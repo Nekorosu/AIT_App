@@ -86,8 +86,8 @@ INSERT INTO `Ученики` (`ФИО`, `Телефон`, `Группа`) VALUES
 ALTER TABLE `Данные_авторизации` MODIFY COLUMN `Пароль` VARCHAR(72) NOT NULL;
 
 INSERT INTO `Данные_авторизации` (`Логин`, `Пароль`, `Роль`) VALUES
-  ('teacher', '$2y$12$h358GBMP/hdFvSQ9kFenke0dn9CKt7VvNIbNUhhXlMKIHwUPXU4eq', 0),
-  ('admin',   '$2y$12$h914qY5LyhDF1JJouNKibu.nvRqOgI6QSqY5nrjwVhDGnlS0stTke', 1);
+  ('teacher', '$2b$12$h358GBMP/hdFvSQ9kFenke0dn9CKt7VvNIbNUhhXlMKIHwUPXU4eq', 0),
+  ('admin',   '$2b$12$h914qY5LyhDF1JJouNKibu.nvRqOgI6QSqY5nrjwVhDGnlS0stTke', 1);
 
 -- -----------------------------------------------------------------------------
 -- Запланированные сессии (для триггера «Экзаменационная» и отчёта по сессии)
