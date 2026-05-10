@@ -50,7 +50,8 @@
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <Image x:Name="ConnectionIcon"
                            Width="18" Height="18"
-                           IsVisible="False"/>
+                           IsVisible="False"
+                           Cursor="Help"/>
                     <TextBlock x:Name="ConnectionStatusText"
                                Text="Проверка соединения..."
                                VerticalAlignment="Center"

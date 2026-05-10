@@ -61,10 +61,11 @@ namespace AIT_App
             }
             else
             {
-                // Соединение не удалось — показываем ошибку и кнопку настроек (демо #19)
-                ConnectionStatusText.Text = "Нет соединения: " + error;
+                // Соединение не удалось — показываем краткий статус, полное сообщение в тултипе иконки
+                ConnectionStatusText.Text = "Нет соединения";
                 ConnectionIcon.IsVisible = true;
                 ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/exclamation.png")));
+                ToolTip.SetTip(ConnectionIcon, error);
                 LoginButton.IsEnabled = false;
                 BtnConnectionSettings.IsVisible = true;
             }
