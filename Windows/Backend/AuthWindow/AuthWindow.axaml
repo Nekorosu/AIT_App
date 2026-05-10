@@ -77,15 +77,23 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- Кнопка входа -->
-            <Button x:Name="LoginButton"
-                    Grid.Row="3"
-                    Content="Войти"
-                    Classes="primary"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    MinHeight="40"
-                    IsEnabled="False"/>
+            <!-- Кнопка входа и дополнительные действия -->
+            <StackPanel Grid.Row="3" Spacing="8">
+                <Button x:Name="LoginButton"
+                        Content="Войти"
+                        Classes="primary"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        MinHeight="40"
+                        IsEnabled="False"/>
+
+                <!-- Не удалять. Для демонстрации будущих возможностей (#19). -->
+                <Button x:Name="BtnConnectionSettings"
+                        Content="Настройки подключения"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        IsVisible="False"/>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>

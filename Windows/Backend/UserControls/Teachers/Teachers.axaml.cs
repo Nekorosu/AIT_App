@@ -50,7 +50,9 @@ namespace AIT_App
         {
             string sql = "SELECT `ФИО`, `Телефон` FROM `Преподаватели` ORDER BY `ФИО`";
             var table = _db.ExecuteQuery(sql);
-            TeachersGrid.ItemsSource = DataBaseCon.ToRowList(table);
+            var rows = DataBaseCon.ToRowList(table);
+            TeachersGrid.ItemsSource = rows;
+            TeachersEmpty.IsVisible = rows.Count == 0;
         }
 
         // Переходит в режим редактирования выбранного преподавателя
@@ -133,6 +135,8 @@ namespace AIT_App
                 });
             }
 
+            string actionKey = _editingFio == null ? "teacher.add" : "teacher.edit";
+            AuditService.Log(actionKey, $"ФИО={fio}, дисциплина={subject}");
             ResetForm();
             LoadTeachers();
         }
@@ -158,6 +162,7 @@ namespace AIT_App
 
             if (result > 0)
             {
+                AuditService.Log("teacher.delete", $"ФИО={fio}");
                 ResetForm();
                 LoadTeachers();
             }

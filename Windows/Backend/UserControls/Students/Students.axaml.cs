@@ -54,7 +54,9 @@ namespace AIT_App
                 ORDER BY u.`Группа`, u.`ФИО`";
 
             var table = _db.ExecuteQuery(sql);
-            StudentsGrid.ItemsSource = DataBaseCon.ToRowList(table);
+            var rows = DataBaseCon.ToRowList(table);
+            StudentsGrid.ItemsSource = rows;
+            StudentsEmpty.IsVisible = rows.Count == 0;
         }
 
         // Переходит в режим редактирования выбранного студента
@@ -126,6 +128,8 @@ namespace AIT_App
 
             if (result > 0)
             {
+                string actionKey = _editingId == null ? "student.add" : "student.edit";
+                AuditService.Log(actionKey, $"ФИО={fio}, группа={group}");
                 ResetForm();
                 LoadStudents();
             }
@@ -156,6 +160,7 @@ namespace AIT_App
 
             if (result > 0)
             {
+                AuditService.Log("student.delete", $"ФИО={fio}, ID={id}");
                 ResetForm();
                 LoadStudents();
             }

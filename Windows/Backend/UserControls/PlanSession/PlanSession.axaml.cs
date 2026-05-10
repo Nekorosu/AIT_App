@@ -60,9 +60,9 @@ namespace AIT_App
                 ORDER BY `ДатаСессии`, `Предмет`";
 
             var table = _db.ExecuteQuery(sql);
-
-            // Если null — показываем пустую таблицу
-            SessionsGrid.ItemsSource = DataBaseCon.ToRowList(table);
+            var rows = DataBaseCon.ToRowList(table);
+            SessionsGrid.ItemsSource = rows;
+            SessionsEmpty.IsVisible = rows.Count == 0;
         }
 
         // Добавляет новую сессию
@@ -100,7 +100,7 @@ namespace AIT_App
                 await Dialogs.ErrorAsync("Добавление", "Ошибка при добавлении.");
             else
             {
-                // Переклассифицируем оценки и обновляем таблицу
+                AuditService.Log("session.add", $"предмет={subject}, дата={date:dd.MM.yyyy}");
                 CallUpdateGradeTypes();
                 LoadSessions();
             }
@@ -134,6 +134,8 @@ namespace AIT_App
                 await Dialogs.ErrorAsync("Удаление", "Не удалось удалить запись.");
                 return;
             }
+
+            AuditService.Log("session.delete", $"предмет={subject}, дата={dateStr}");
 
             // Если удалили ту запись что редактировали — выходим из режима правки
             if (_editingId == id)
@@ -207,6 +209,7 @@ namespace AIT_App
                 return;
             }
 
+            AuditService.Log("session.edit", $"предмет={subject}, дата={date:dd.MM.yyyy}");
             CallUpdateGradeTypes();
             ExitEditMode();
             LoadSessions();

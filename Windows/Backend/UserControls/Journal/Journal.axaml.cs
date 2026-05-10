@@ -225,6 +225,7 @@ namespace AIT_App
 
             _currentTable = table;
             JournalGrid.ItemsSource = DataBaseCon.ToRowList(table);
+            JournalEmpty.IsVisible = table.Rows.Count == 0;
 
             // Обновляем заголовок карточки и мета-инфо
             GridHeaderLabel.Text = $"{subject} — {group}";
@@ -281,7 +282,10 @@ namespace AIT_App
             else if (result < 0)
                 await Dialogs.ErrorAsync("Добавление", "Ошибка при сохранении в базу данных.");
             else
-                LoadJournal(); // перезагружаем таблицу
+            {
+                AuditService.Log("grade.add", $"студент={studentName}, предмет={subject}, оценка={grade}, дата={date:dd.MM.yyyy}");
+                LoadJournal();
+            }
         }
 
         // Срабатывает когда пользователь выбирает строку в таблице
@@ -355,7 +359,10 @@ namespace AIT_App
             });
 
             if (result > 0)
-                LoadJournal(); // перезагружаем чтобы показать новое значение
+            {
+                AuditService.Log("grade.edit", $"студент={studentName}, предмет={subject}, дата={date:dd.MM.yyyy}, новая оценка={newGrade}");
+                LoadJournal();
+            }
             else
                 await Dialogs.ErrorAsync("Ошибка", "Не удалось обновить оценку.");
         }
@@ -416,6 +423,7 @@ namespace AIT_App
 
             if (result > 0)
             {
+                AuditService.Log("grade.delete", $"студент={fio}, предмет={subject}, дата={dateStr}");
                 HideEditPanel();
                 LoadJournal();
             }
