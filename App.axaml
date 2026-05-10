@@ -301,7 +301,7 @@
             <Setter Property="FontSize" Value="13"/>
         </Style>
 
-        <!-- ========== ScrollBar (тонкие современные) ========== -->
+        <!-- ========== ScrollBar ========== -->
         <Style Selector="ScrollBar">
             <Setter Property="Background" Value="Transparent"/>
         </Style>
