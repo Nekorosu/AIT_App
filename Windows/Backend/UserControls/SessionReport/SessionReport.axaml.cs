@@ -98,6 +98,19 @@ namespace AIT_App
                 return;
             }
 
+            if (flat.Rows.Count == 0)
+            {
+                GradesEmpty.IsVisible = true;
+                GradesGrid.Columns.Clear();
+                GradesGrid.ItemsSource = null;
+                PerfGrid.ItemsSource = null;
+                _lastGrades = null;
+                _lastPerf = null;
+                return;
+            }
+
+            GradesEmpty.IsVisible = false;
+
             // Строим pivot-таблицу из плоских данных
             _lastGrades = BuildPivot(flat);
             _lastPerf = BuildPerformance(flat);

@@ -70,6 +70,15 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
+                    <!-- Заглушка при пустом списке преподавателей -->
+                    <Border x:Name="TeachersEmpty" Grid.Row="1" IsVisible="False"
+                            VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                        <TextBlock Text="Список преподавателей пуст. Добавьте первого преподавателя с помощью формы слева."
+                                   Foreground="{StaticResource FgSecondaryBrush}"
+                                   FontSize="13" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="340"/>
+                    </Border>
+
                     <Border Grid.Row="2" Padding="16,12"
                             BorderBrush="{StaticResource BorderLightBrush}"
                             BorderThickness="0,1,0,0">

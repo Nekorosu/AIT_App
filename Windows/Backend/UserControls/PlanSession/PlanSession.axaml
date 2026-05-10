@@ -108,6 +108,15 @@
                                                 Binding="{Binding [ДатаСессии]}" Width="180"/>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Заглушка при отсутствии запланированных сессий -->
+                    <Border x:Name="SessionsEmpty" Grid.Row="1" IsVisible="False"
+                            VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                        <TextBlock Text="Нет запланированных сессий. Выберите предмет и дату, затем нажмите «Добавить»."
+                                   Foreground="{StaticResource FgSecondaryBrush}"
+                                   FontSize="13" HorizontalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="340"/>
+                    </Border>
                 </Grid>
             </Border>
 

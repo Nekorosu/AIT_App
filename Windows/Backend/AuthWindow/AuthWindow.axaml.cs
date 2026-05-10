@@ -61,11 +61,12 @@ namespace AIT_App
             }
             else
             {
-                // Соединение не удалось — показываем ошибку
+                // Соединение не удалось — показываем ошибку и кнопку настроек (демо #19)
                 ConnectionStatusText.Text = "Нет соединения: " + error;
                 ConnectionIcon.IsVisible = true;
                 ConnectionIcon.Source = new Bitmap(AssetLoader.Open(new Uri("avares://AIT_App/Icons/exclamation.png")));
                 LoginButton.IsEnabled = false;
+                BtnConnectionSettings.IsVisible = true;
             }
         }
 
@@ -142,6 +143,7 @@ namespace AIT_App
 
             if (!passwordValid)
             {
+                AuditService.Log("login.fail", $"логин={login}");
                 await Dialogs.ErrorAsync("Вход", "Неверный логин или пароль.");
                 PasswordInput.Text = "";
                 return;
@@ -149,6 +151,10 @@ namespace AIT_App
 
             // Преобразуем роль из БД в число
             int role = Convert.ToInt32(row["Роль"]);
+
+            // Сохраняем логин в сессии для системы аудита
+            Session.CurrentLogin = login;
+            AuditService.Log("login.success", $"роль={role}");
 
             // Открываем главное окно, передаём логин и роль
             var homeWindow = new HomeWindow(login, role);

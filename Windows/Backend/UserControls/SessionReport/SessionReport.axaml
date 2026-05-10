@@ -82,6 +82,15 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           Margin="4"/>
+
+                <!-- Заглушка при отсутствии экзаменационных оценок -->
+                <Border x:Name="GradesEmpty" Grid.Row="1" IsVisible="False"
+                        VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                    <TextBlock Text="Нет экзаменационных оценок за выбранный период. Проверьте группу и диапазон дат."
+                               Foreground="{StaticResource FgSecondaryBrush}"
+                               FontSize="13" HorizontalAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="400"/>
+                </Border>
             </Grid>
         </Border>
 
@@ -103,7 +112,7 @@
                 <DataGrid x:Name="PerfGrid" Grid.Row="1"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
-                          Margin="4"  >
+                          Margin="4">
                     <DataGrid.Columns>
     <DataGridTextColumn Header="Предмет"
                         Binding="{Binding [Предмет]}" Width="*"/>
@@ -122,3 +131,4 @@
 
     </Grid>
 </UserControl>
+
