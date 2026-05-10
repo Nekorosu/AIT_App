@@ -203,6 +203,15 @@
                                             Width="150"/>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <!-- Заглушка при пустом результате -->
+                <Border x:Name="JournalEmpty" Grid.Row="1" IsVisible="False"
+                        VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                    <TextBlock Text="Оценки не найдены. Выберите группу и предмет, затем нажмите «Загрузить»."
+                               Foreground="{StaticResource FgSecondaryBrush}"
+                               FontSize="13" HorizontalAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="400"/>
+                </Border>
             </Grid>
         </Border>
 

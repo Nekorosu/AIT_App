@@ -208,12 +208,12 @@ namespace AIT_App
             GridDebt.ItemsSource = DataBaseCon.ToRowList(_tDebt);
             GridRed.ItemsSource = DataBaseCon.ToRowList(_tRed);
 
-            // Обновляем счётчики записей
-            CntExcellent.Text = $"Найдено: {_tExcellent.Rows.Count}";
-            CntGood.Text = $"Найдено: {_tGood.Rows.Count}";
-            CntThree.Text = $"Найдено: {_tThree.Rows.Count}";
-            CntDebt.Text = $"Найдено: {_tDebt.Rows.Count}";
-            CntRed.Text = $"Найдено: {_tRed.Rows.Count}";
+            // Счётчики: показываем "нет данных" если таблица пуста
+            CntExcellent.Text = _tExcellent.Rows.Count > 0 ? $"Найдено: {_tExcellent.Rows.Count}" : "Нет данных по заданным фильтрам";
+            CntGood.Text      = _tGood.Rows.Count > 0      ? $"Найдено: {_tGood.Rows.Count}"      : "Нет данных по заданным фильтрам";
+            CntThree.Text     = _tThree.Rows.Count > 0     ? $"Найдено: {_tThree.Rows.Count}"     : "Нет данных по заданным фильтрам";
+            CntDebt.Text      = _tDebt.Rows.Count > 0      ? $"Найдено: {_tDebt.Rows.Count}"      : "Нет данных по заданным фильтрам";
+            CntRed.Text       = _tRed.Rows.Count > 0       ? $"Найдено: {_tRed.Rows.Count}"       : "Нет данных по заданным фильтрам";
         }
 
         // Группирует строки плоской таблицы по ID студента
