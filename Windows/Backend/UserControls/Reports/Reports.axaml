@@ -112,8 +112,8 @@
                                 <DataGridTextColumn Header="ФИО" Binding="{Binding [ФИО]}" Width="*"/>
                                 <DataGridTextColumn Header="Группа" Binding="{Binding [Группа]}" Width="110"/>
                                 <DataGridTextColumn Header="Специальность" Binding="{Binding [Специальность]}" Width="180"/>
-                                <DataGridTextColumn Header="Кол-во «2»" Binding="{Binding [КоличествоДвоек]}" Width="100"/>
-                                <DataGridTextColumn Header="Кол-во «Н»" Binding="{Binding [КоличествоН]}" Width="100"/>
+                                <DataGridTextColumn Header="Двоек" Binding="{Binding [КоличествоДвоек]}" Width="80"/>
+                                <DataGridTextColumn Header="Неявок" Binding="{Binding [КоличествоН]}" Width="80"/>
                                 <DataGridTextColumn Header="Предметы" Binding="{Binding [Предметы]}" Width="220"/>
                             </DataGrid.Columns>
                         </DataGrid>
