@@ -24,7 +24,7 @@
     </ItemGroup>
     <ItemGroup>
         <AvaloniaResource Include="Icons\**" />
-        <Content Include="config.json">
+        <Content Include="config.json" Condition="Exists('config.json')">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
